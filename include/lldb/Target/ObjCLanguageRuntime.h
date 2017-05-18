@@ -41,6 +41,9 @@ public:
     eObjC_VersionUnknown = 0,
     eAppleObjC_V1 = 1,
     eAppleObjC_V2 = 2
+    // @mulle-lldb@ add eMulleObjC type >
+    ,eMulleObjC_V1 = 1848
+    // @mulle-lldb@ add eMulleObjC type <
   };
 
   typedef lldb::addr_t ObjCISA;

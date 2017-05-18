@@ -63,6 +63,9 @@
 #include "Plugins/LanguageRuntime/Java/JavaLanguageRuntime.h"
 #include "Plugins/LanguageRuntime/ObjC/AppleObjCRuntime/AppleObjCRuntimeV1.h"
 #include "Plugins/LanguageRuntime/ObjC/AppleObjCRuntime/AppleObjCRuntimeV2.h"
+// @mulle-lldb@ include MulleObjCRuntimeV1 >
+#include "Plugins/LanguageRuntime/ObjC/MulleObjCRuntime/MulleObjCRuntimeV1.h"
+// @mulle-lldb@ include MulleObjCRuntimeV1 <
 #include "Plugins/LanguageRuntime/RenderScript/RenderScriptRuntime/RenderScriptRuntime.h"
 #include "Plugins/MemoryHistory/asan/MemoryHistoryASan.h"
 #include "Plugins/OperatingSystem/Go/OperatingSystemGo.h"
@@ -322,6 +325,9 @@ void SystemInitializerFull::Initialize() {
   ItaniumABILanguageRuntime::Initialize();
   AppleObjCRuntimeV2::Initialize();
   AppleObjCRuntimeV1::Initialize();
+  // @mulle-lldb@ Initialize runtime >
+  MulleObjCRuntimeV1::Initialize();
+  // @mulle-lldb@ Initialize runtime <
   SystemRuntimeMacOSX::Initialize();
   RenderScriptRuntime::Initialize();
   GoLanguageRuntime::Initialize();
@@ -445,6 +451,9 @@ void SystemInitializerFull::Terminate() {
   ItaniumABILanguageRuntime::Terminate();
   AppleObjCRuntimeV2::Terminate();
   AppleObjCRuntimeV1::Terminate();
+  // @mulle-lldb@ Terminate runtime >
+  MulleObjCRuntimeV1::Terminate();
+  // @mulle-lldb@ Terminate runtime <
   SystemRuntimeMacOSX::Terminate();
   RenderScriptRuntime::Terminate();
   JavaLanguageRuntime::Terminate();
