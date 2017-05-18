@@ -291,10 +291,8 @@ bool MulleObjCRuntime::MulleIsModuleObjCLibrary(const ModuleSP &module_sp) {
                            ConstString( "__get_or_create_mulle_objc_runtime"),
                            eSymbolTypeCode, contexts))
   {
-#if DEBUG
     fprintf( stderr, "MulleObjC IN DA HOUSE at \"%s\"!!\n",
             module_sp->GetFileSpec().GetFilename().AsCString());
-#endif
     return true;
   }
   return false;

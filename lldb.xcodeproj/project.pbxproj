@@ -2430,6 +2430,8 @@
 		413BB5D71ECDA4E300106271 /* MulleObjCTypeEncodingParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MulleObjCTypeEncodingParser.h; sourceTree = "<group>"; };
 		413BB5D81ECDA4E300106271 /* MulleThreadPlanStepThroughObjCTrampoline.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MulleThreadPlanStepThroughObjCTrampoline.cpp; sourceTree = "<group>"; };
 		413BB5D91ECDA4E300106271 /* MulleThreadPlanStepThroughObjCTrampoline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MulleThreadPlanStepThroughObjCTrampoline.h; sourceTree = "<group>"; };
+		413BB5EE1ECDC41000106271 /* mulle-objc-lookup.inc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.pascal; path = "mulle-objc-lookup.inc"; sourceTree = "<group>"; };
+		413BB5EF1ECDCBFE00106271 /* mulle-objc-lookup.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "mulle-objc-lookup.c"; sourceTree = "<group>"; };
 		4906FD4012F2255300A2A77C /* ASTDumper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ASTDumper.cpp; path = ExpressionParser/Clang/ASTDumper.cpp; sourceTree = "<group>"; };
 		4906FD4412F2257600A2A77C /* ASTDumper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ASTDumper.h; path = ExpressionParser/Clang/ASTDumper.h; sourceTree = "<group>"; };
 		490A36BD180F0E6F00BA31F8 /* PlatformWindows.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlatformWindows.cpp; sourceTree = "<group>"; };
@@ -5767,6 +5769,8 @@
 				413BB5D01ECDA4E300106271 /* MulleObjCRuntimeV1.cpp */,
 				413BB5D11ECDA4E300106271 /* MulleObjCRuntimeV1.h */,
 				413BB5D41ECDA4E300106271 /* MulleObjCTrampolineHandler.cpp */,
+				413BB5EE1ECDC41000106271 /* mulle-objc-lookup.inc */,
+				413BB5EF1ECDCBFE00106271 /* mulle-objc-lookup.c */,
 				413BB5D51ECDA4E300106271 /* MulleObjCTrampolineHandler.h */,
 				413BB5D61ECDA4E300106271 /* MulleObjCTypeEncodingParser.cpp */,
 				413BB5D71ECDA4E300106271 /* MulleObjCTypeEncodingParser.h */,
