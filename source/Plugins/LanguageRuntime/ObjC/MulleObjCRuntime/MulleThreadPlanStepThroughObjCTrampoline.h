@@ -20,6 +20,7 @@
 #include "lldb/lldb-enumerations.h"
 #include "lldb/lldb-types.h"
 
+// this is unchanged from AppleThreadPlanStepThroughObjcTrampoline except for the naming and some comments
 namespace lldb_private {
 
 class MulleThreadPlanStepThroughObjCTrampoline : public ThreadPlan {

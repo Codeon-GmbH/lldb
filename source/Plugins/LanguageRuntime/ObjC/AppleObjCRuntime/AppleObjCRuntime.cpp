@@ -337,6 +337,7 @@ bool AppleObjCRuntime::ReadObjCLibrary(const ModuleSP &module_sp) {
 }
 
 ThreadPlanSP AppleObjCRuntime::GetStepThroughTrampolinePlan(Thread &thread,
+                                                            StackID &return_stack_id,
                                                             bool stop_others) {
   ThreadPlanSP thread_plan_sp;
   if (m_objc_trampoline_handler_ap.get())

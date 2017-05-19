@@ -39,7 +39,7 @@ MulleThreadPlanStepThroughObjCTrampoline::
         ValueList &input_values, lldb::addr_t isa_addr, lldb::addr_t sel_addr,
         bool stop_others)
     : ThreadPlan(ThreadPlan::eKindGeneric,
-                 "MacOSX Step through ObjC Trampoline", thread, eVoteNoOpinion,
+                 "Step through MulleObjC trampoline", thread, eVoteNoOpinion,
                  eVoteNoOpinion),
       m_trampoline_handler(trampoline_handler),
       m_args_addr(LLDB_INVALID_ADDRESS), m_input_values(input_values),

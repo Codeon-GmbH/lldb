@@ -30,8 +30,9 @@ public:
 
   ~MulleObjCTrampolineHandler();
 
-  lldb::ThreadPlanSP GetStepThroughDispatchPlan(Thread &thread,
-                                                bool stop_others);
+  lldb::ThreadPlanSP GetStepThroughDispatchPlan( Thread &thread,
+                                                 const StackID &stackid,
+                                                 bool stop_others);
   lldb::ThreadPlanSP GetStepOutDispatchPlan(Thread &thread,
                                              bool stop_others);
    
@@ -56,6 +57,7 @@ public:
 protected:
    lldb::addr_t    ReadIndirectJMPQ_X86_64( lldb::addr_t curr_pc);
    bool            GetDispatchFunctionForPCViaMap( lldb::addr_t curr_pc, DispatchFunction &this_dispatch);
+   void            SetBreakpointForReturn( Thread &thread, const StackID &m_stack_id);
 
 private:
   lldb::addr_t  LookupFunctionSymbol( const lldb::ProcessSP &process_sp,
