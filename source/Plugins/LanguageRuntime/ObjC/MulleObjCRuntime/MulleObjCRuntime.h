@@ -76,6 +76,8 @@ public:
   // it, also cache it once it is found to ensure quick lookups.
   lldb::ModuleSP GetMulleObjCRuntimeModule();
 
+  bool IsSymbolARuntimeThunk(const Symbol &symbol) override;
+  
   // Sync up with the target
 
   void ModulesDidLoad(const ModuleList &module_list) override;

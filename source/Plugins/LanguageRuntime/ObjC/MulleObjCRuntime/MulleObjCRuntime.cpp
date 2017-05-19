@@ -302,6 +302,23 @@ bool MulleObjCRuntime::IsMulleObjCRuntimeModule(const ModuleSP &module_sp) {
 }
 
 
+bool MulleObjCRuntime::IsSymbolARuntimeThunk(const Symbol &symbol) {
+
+  ConstString symbol_name = symbol.GetName();
+
+   fprintf( stderr, "IsSymbolARuntimeThunk \"%s\": ",
+            symbol.GetName().AsCString());
+  
+  if( ! ConstString::Compare( symbol_name, ConstString( "_mulle_objc_object_call_class_needs_cache"), true))
+  {
+    fprintf( stderr, "YES\n");
+    return( true);
+  }
+  fprintf( stderr, "NO\n");
+  return( false);
+}
+
+
 // this is not used...
 bool MulleObjCRuntime::IsMulleObjCCodeModule(const ModuleSP &module_sp) {
   if (! module_sp)
@@ -349,13 +366,14 @@ bool MulleObjCRuntime::ReadObjCLibrary(const ModuleSP &module_sp) {
 }
 
 ThreadPlanSP MulleObjCRuntime::GetStepThroughTrampolinePlan(Thread &thread,
+                                                            StackID &return_stack_id,
                                                             bool stop_others) {
   ThreadPlanSP thread_plan_sp;
    
   fprintf( stderr, "GetStepThroughTrampolinePlan called\n");
   if (m_objc_trampoline_handler_ap.get())
     thread_plan_sp = m_objc_trampoline_handler_ap->GetStepThroughDispatchPlan(
-        thread, stop_others);
+        thread, return_stack_id, stop_others);
   return thread_plan_sp;
 }
 
