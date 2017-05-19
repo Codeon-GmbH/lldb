@@ -1,0 +1,5 @@
+"void   *__lldb_objc_walk_classes( void (*callback)( void *cls, void *userinfo),\n"
+"void *userinfo)\n"
+"{\n"
+"mulle_objc_lldb_walk_classes( callback, userinfo);\n"
+"}\n"

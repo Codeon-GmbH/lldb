@@ -20,6 +20,12 @@
 
 namespace lldb_private {
 
+//
+// The non-trampoline code uses LIBLLDB_LOG_LANGUAGE logging, which
+// kinda fits by meaning and it is a relatively quiet channel.
+//
+// Enable verbose logging in lldb with `log enable -v lldb language`
+//
 class MulleObjCRuntimeV1 : public MulleObjCRuntime {
 public:
   ~MulleObjCRuntimeV1() override = default;
@@ -60,7 +66,9 @@ public:
 
     bool IsValid() override { return m_valid; }
 
-    // v1 does not support tagged pointers
+    //
+    // TODO: should get on with this...
+    //
     bool GetTaggedPointerInfo(uint64_t *info_bits = nullptr,
                               uint64_t *value_bits = nullptr,
                               uint64_t *payload = nullptr) override {
@@ -146,12 +154,13 @@ protected:
     lldb::addr_t m_buckets_ptr;
   };
 
-  lldb::addr_t GetISAHashTablePointer();
+  lldb::addr_t CallDangerousGetClassTableFunction( Process *process);
+  lldb::addr_t GetISAHashTablePointer( Process *process);
 
   HashTableSignature m_hash_signature;
   lldb::addr_t m_isa_hash_table_ptr;
   std::unique_ptr<DeclVendor> m_decl_vendor_ap;
-
+  
 private:
   MulleObjCRuntimeV1(Process *process);
 };

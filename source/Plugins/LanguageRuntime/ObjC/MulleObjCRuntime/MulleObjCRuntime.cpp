@@ -194,7 +194,8 @@ bool MulleObjCRuntime::GetObjectDescription(Stream &strm, Value &value,
   return cstr_len > 0;
 }
 
-lldb::ModuleSP MulleObjCRuntime::GetObjCModule() {
+// why this again ???
+lldb::ModuleSP MulleObjCRuntime::GetMulleObjCRuntimeModule() {
   ModuleSP module_sp(m_objc_module_wp.lock());
   if (module_sp)
     return module_sp;
@@ -204,7 +205,7 @@ lldb::ModuleSP MulleObjCRuntime::GetObjCModule() {
     const ModuleList &modules = process->GetTarget().GetImages();
     for (uint32_t idx = 0; idx < modules.GetSize(); idx++) {
       module_sp = modules.GetModuleAtIndex(idx);
-      if (MulleObjCRuntime::MulleIsModuleObjCLibrary(module_sp)) {
+      if (MulleObjCRuntime::IsMulleObjCRuntimeModule(module_sp)) {
         m_objc_module_wp = module_sp;
         return module_sp;
       }
@@ -279,19 +280,42 @@ MulleObjCRuntime::FixUpDynamicType(const TypeAndOrName &type_and_or_name,
   return ret;
 }
 
-bool MulleObjCRuntime::MulleIsModuleObjCLibrary(const ModuleSP &module_sp) {
+bool MulleObjCRuntime::IsMulleObjCRuntimeModule(const ModuleSP &module_sp) {
+   if (! module_sp)
+      return false;
+   
+   SymbolContextList contexts;
+   
+   //
+   // if mulle_objc_lldb_lookup_methodimplementation then this module
+   // contains the mulle_objc_runtime lldb code
+   //
+   if( module_sp->FindSymbolsWithNameAndType(
+                                             ConstString( "mulle_objc_lldb_lookup_methodimplementation"),
+                                             eSymbolTypeCode, contexts))
+   {
+      //fprintf( stderr, "MulleObjC runtime IN DA HOUSE at \"%s\"!!\n",
+      //        module_sp->GetFileSpec().GetFilename().AsCString());
+      return true;
+   }
+   return false;
+}
+
+
+// this is not used...
+bool MulleObjCRuntime::IsMulleObjCCodeModule(const ModuleSP &module_sp) {
   if (! module_sp)
      return false;
 
   SymbolContextList contexts;
    
-  // if __get_or_create_mulle_objc_runtime is defined it's a bona fide
-  // MulleObjC module IMO
+  // if __load_mulle_objc is defined it's a bona fide
+  // MulleObjC code containing module IMO
   if( module_sp->FindSymbolsWithNameAndType(
-                           ConstString( "__get_or_create_mulle_objc_runtime"),
+                           ConstString( "__load_mulle_objc"),
                            eSymbolTypeCode, contexts))
   {
-    fprintf( stderr, "MulleObjC IN DA HOUSE at \"%s\"!!\n",
+    fprintf( stderr, "MulleObjC code at \"%s\"!!\n",
             module_sp->GetFileSpec().GetFilename().AsCString());
     return true;
   }
@@ -304,7 +328,7 @@ void MulleObjCRuntime::GetValuesForGlobalCFBooleans(lldb::addr_t &cf_true,
 }
 
 bool MulleObjCRuntime::IsModuleObjCLibrary(const ModuleSP &module_sp) {
-  return MulleIsModuleObjCLibrary(module_sp);
+  return IsMulleObjCRuntimeModule(module_sp);
 }
 
 bool MulleObjCRuntime::ReadObjCLibrary(const ModuleSP &module_sp) {
@@ -313,16 +337,22 @@ bool MulleObjCRuntime::ReadObjCLibrary(const ModuleSP &module_sp) {
   // current module, then we don't have to reread it?
   m_objc_trampoline_handler_ap.reset(
       new MulleObjCTrampolineHandler(m_process->shared_from_this(), module_sp));
-  if (m_objc_trampoline_handler_ap.get() != NULL) {
+  if (m_objc_trampoline_handler_ap.get() != NULL && m_objc_trampoline_handler_ap.get()->CanStepThrough()) {
     m_read_objc_library = true;
+     // fprintf( stderr, "ReadObjCLibrary succeeds\n");
     return true;
-  } else
-    return false;
+  }
+
+   //  fprintf( stderr, "ReadObjCLibrary fails\n");
+  m_read_objc_library = false; // pedantically reset
+  return false;
 }
 
 ThreadPlanSP MulleObjCRuntime::GetStepThroughTrampolinePlan(Thread &thread,
                                                             bool stop_others) {
   ThreadPlanSP thread_plan_sp;
+   
+  fprintf( stderr, "GetStepThroughTrampolinePlan called\n");
   if (m_objc_trampoline_handler_ap.get())
     thread_plan_sp = m_objc_trampoline_handler_ap->GetStepThroughDispatchPlan(
         thread, stop_others);
@@ -349,10 +379,10 @@ MulleObjCRuntime::GetObjCVersion(Process *process, ModuleSP &objc_module_sp) {
      // isLoadedInTarget doesn't work for me, since we get called
      // _while_ loading apparently so main f.e. will be found as
      // a symbol, but the module itself is not loaded yet
-     // (or so it seems)
+     // (or so it seems, as we are statically linking ?)
      
      if ( // module_sp->IsLoadedInTarget(&target) &&
-        MulleIsModuleObjCLibrary(module_sp)
+        IsMulleObjCRuntimeModule(module_sp)
         ) {
       return ObjCRuntimeVersions::eMulleObjC_V1;
     }
@@ -403,24 +433,6 @@ bool MulleObjCRuntime::ExceptionBreakpointsExplainStop(
 }
 
 bool MulleObjCRuntime::CalculateHasNewLiteralsAndIndexing() {
-  if (!m_process)
-    return false;
-
-  Target &target(m_process->GetTarget());
-
-  static ConstString s_method_signature(
-      "-[NSDictionary objectForKeyedSubscript:]");
-  static ConstString s_arclite_method_signature(
-      "__arclite_objectForKeyedSubscript");
-
-  SymbolContextList sc_list;
-
-  if (target.GetImages().FindSymbolsWithNameAndType(s_method_signature,
-                                                    eSymbolTypeCode, sc_list) ||
-      target.GetImages().FindSymbolsWithNameAndType(s_arclite_method_signature,
-                                                    eSymbolTypeCode, sc_list))
-    return true;
-  else
     return false;
 }
 
@@ -429,13 +441,16 @@ lldb::SearchFilterSP MulleObjCRuntime::CreateExceptionSearchFilter() {
 }
 
 void MulleObjCRuntime::ReadObjCLibraryIfNeeded(const ModuleList &module_list) {
-  if (!HasReadObjCLibrary()) {
+   // it seems, that when you run again ModulesDidLoad gets called
+   // and this "caching" fcks things up
+   //if (!HasReadObjCLibrary())
+  {
     std::lock_guard<std::recursive_mutex> guard(module_list.GetMutex());
 
     size_t num_modules = module_list.GetSize();
     for (size_t i = 0; i < num_modules; i++) {
       auto mod = module_list.GetModuleAtIndex(i);
-      if (IsModuleObjCLibrary(mod)) {
+      if(IsModuleObjCLibrary(mod)) {
         ReadObjCLibrary(mod);
         break;
       }

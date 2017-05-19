@@ -28,6 +28,8 @@
 using namespace lldb;
 using namespace lldb_private;
 
+#define MULLE_LOG   LIBLLDB_LOG_LANGUAGE
+//#define MULLE_LOG   LIBLLDB_LOG_STEP
 //----------------------------------------------------------------------
 // ThreadPlanStepThroughObjCTrampoline constructor
 //----------------------------------------------------------------------
@@ -59,12 +61,16 @@ void MulleThreadPlanStepThroughObjCTrampoline::DidPush() {
 }
 
 bool MulleThreadPlanStepThroughObjCTrampoline::InitializeFunctionCaller() {
+   Log *log(lldb_private::GetLogIfAllCategoriesSet(MULLE_LOG));
   if (!m_func_sp) {
     DiagnosticManager diagnostics;
-    m_args_addr =
+
+     m_args_addr =
         m_trampoline_handler->SetupDispatchFunction(m_thread, m_input_values);
 
     if (m_args_addr == LLDB_INVALID_ADDRESS) {
+       if (log)
+          log->Printf("SetupDispatchFunction failed.");
       return false;
     }
     m_impl_function =
@@ -78,8 +84,15 @@ bool MulleThreadPlanStepThroughObjCTrampoline::InitializeFunctionCaller() {
     m_func_sp = m_impl_function->GetThreadPlanToCallFunction(
         exc_ctx, m_args_addr, options, diagnostics);
     m_func_sp->SetOkayToDiscard(true);
+
+    if (log)
+       log->Printf("Mulle: thread plan queued");
+     
     m_thread.QueueThreadPlan(m_func_sp, false);
   }
+  else
+    if (log)
+       log->Printf("Mulle: m_func_sp not set");
   return true;
 }
 
@@ -122,12 +135,21 @@ lldb::StateType MulleThreadPlanStepThroughObjCTrampoline::GetPlanRunState() {
 bool MulleThreadPlanStepThroughObjCTrampoline::ShouldStop(Event *event_ptr) {
   // First stage: we are still handling the "call a function to get the target
   // of the dispatch"
+  Log *log(lldb_private::GetLogIfAllCategoriesSet(MULLE_LOG));
+
+   if (log)
+      log->Printf("Mulle: should stop is called");
+   
   if (m_func_sp) {
     if (!m_func_sp->IsPlanComplete()) {
+       if (log)
+          log->Printf("Mulle: plan is complete");
       return false;
     } else {
       if (!m_func_sp->PlanSucceeded()) {
         SetPlanComplete(false);
+        if (log)
+           log->Printf("Mulle: plan failed (done)");
         return true;
       }
       m_func_sp.reset();
@@ -147,7 +169,6 @@ bool MulleThreadPlanStepThroughObjCTrampoline::ShouldStop(Event *event_ptr) {
     lldb::addr_t target_addr = target_addr_value.GetScalar().ULongLong();
     Address target_so_addr;
     target_so_addr.SetOpcodeLoadAddress(target_addr, exc_ctx.GetTargetPtr());
-    Log *log(lldb_private::GetLogIfAllCategoriesSet(LIBLLDB_LOG_STEP));
     if (target_addr == 0) {
       if (log)
         log->Printf("Got target implementation of 0x0, stopping.");
@@ -195,9 +216,14 @@ bool MulleThreadPlanStepThroughObjCTrampoline::ShouldStop(Event *event_ptr) {
     return false;
   } else if (m_thread.IsThreadPlanDone(m_run_to_sp.get())) {
     // Third stage, work the run to target plan.
+     if (log)
+        log->Printf("Mulle: thread plan is done");
     SetPlanComplete();
     return true;
   }
+
+   if (log)
+      log->Printf("Mulle: should stop says no");
   return false;
 }
 

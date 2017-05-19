@@ -2,9 +2,9 @@ add_lldb_library(lldbPluginMulleObjCRuntime PLUGIN
   MulleObjCRuntime.cpp
   MulleObjCRuntimeV1.cpp
   MulleObjCTrampolineHandler.cpp
-  MulleObjCDeclVendor.cpp
+#  MulleObjCDeclVendor.cpp
   MulleThreadPlanStepThroughObjCTrampoline.cpp
-  MulleObjCTypeEncodingParser.cpp
+#  MulleObjCTypeEncodingParser.cpp
 
   LINK_LIBS
     clangAST

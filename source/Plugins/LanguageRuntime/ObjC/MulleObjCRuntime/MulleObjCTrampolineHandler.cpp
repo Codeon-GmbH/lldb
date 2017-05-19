@@ -35,58 +35,113 @@
 #include "lldb/Target/Target.h"
 #include "lldb/Target/Thread.h"
 #include "lldb/Target/ThreadPlanRunToAddress.h"
+#include "lldb/Target/ThreadPlanStepOut.h"
 #include "lldb/Utility/ConstString.h"
 #include "lldb/Utility/FileSpec.h"
 #include "lldb/Utility/Log.h"
 
 #include "llvm/ADT/STLExtras.h"
 
+#define MULLE_LOG   LIBLLDB_LOG_LANGUAGE
+//#define MULLE_LOG   LIBLLDB_LOG_STEP
+
+
 using namespace lldb;
 using namespace lldb_private;
 
-const char *MulleObjCTrampolineHandler::g_lookup_implementation_function_name =
-    "__lldb_lookup_mulle_objc_methodimplementation";
+static const char *g_lookup_implementation_function_name =
+    "__lldb_objc_find_implementation_for_selector";
 
-const char *MulleObjCTrampolineHandler::g_lookup_implementation_function_code =
+static const char *g_lookup_implementation_function_code =
 "extern \"C\"\n"
 "{\n"
-#include "mulle-objc-lookup.inc"
+#include "mulle-objc-lookup-imp.inc"
 "}\n";
 
 
 MulleObjCTrampolineHandler::~MulleObjCTrampolineHandler() {}
 
 
+
+// what should we step through anyway ?
+// I would say "front" facing function calls emitted by -O0
+// which are:
+//
+//  mulle_objc_object_call
+//  mulle_objc_object_call_classid
+//  mulle_objc_infraclass_metacall_classid
+//
 const MulleObjCTrampolineHandler::DispatchFunction
     MulleObjCTrampolineHandler::g_dispatch_functions[] = {
         // NAME                              HAS_CLASS_ARG  HAS_CLASSID_ARG  IS_META
        {"mulle_objc_object_call",                    false,  false, false },
-       {"mulle_objc_object_call2",                   false,  false, false },
-       {"mulle_objc_object_call2_empty_cache",       false,  false, false },
-       {"mulle_objc_object_constant_methodid_call",  false,  false, false },
-       {"mulle_objc_object_variable_methodid_call",  false,  false, false },
+       // {"mulle_objc_object_call2",                   false,  false, false },
+       // {"mulle_objc_object_call2_empty_cache",       false,  false, false },
+       // {"mulle_objc_object_constant_methodid_call",  false,  false, false },
+       // {"mulle_objc_object_variable_methodid_call",  false,  false, false },
 
        // hm hm
-       {"mulle_objc_object_inline_constant_methodid_call", false,  false, false },
-       {"mulle_objc_object_inline_variable_methodid_call", false,  false, false },
+       // {"mulle_objc_object_inline_constant_methodid_call", false,  false, false },
+       // {"mulle_objc_object_inline_variable_methodid_call", false,  false, false },
        
        // calls to object  where class is fourth parameter
-       { "mulle_objc_object_call_class",              true,  false, false  },
+       // { "mulle_objc_object_call_class",              true,  false, false  },
        //       { "_mulle_objc_object_call_class_needs_cache", true,  false, false  },
-       { "mulle_objc_object_call_needs_cache2",       true,  false, false  },
-       { "mulle_objc_object_call_uncached_class",     true,  false, false  },
-       { "mulle_objc_object_call_class_empty_cache",  true,  false, false  },
+       // { "mulle_objc_object_call_needs_cache2",       true,  false, false  },
+       // { "mulle_objc_object_call_uncached_class",     true,  false, false  },
+       // { "mulle_objc_object_call_class_empty_cache",  true,  false, false  },
 
        // super calls, where we have a classid as fourth parameter
        {"mulle_objc_object_call_classid",                 false, true, false },
-       //       {"_mulle_objc_object_inline_call_classid",         false, true, false },
-       //       {"_mulle_objc_object_unfailing_call_methodid",     false, true, false },
+       // {"_mulle_objc_object_inline_call_classid",         false, true, false },
+       // {"_mulle_objc_object_unfailing_call_methodid",     false, true, false },
 
        // super calls, known to metaclass
        {"mulle_objc_infraclass_metacall_classid",         false, true, true  },
-       {"mulle_objc_infraclass_inline_metacall_classid",  false, true, true  }
-       //       {"_mulle_objc_infraclass_inline_metacall_classid", false, true, true  }
+       // {"mulle_objc_infraclass_inline_metacall_classid",  false, true, true  }
+       // {"_mulle_objc_infraclass_inline_metacall_classid", false, true, true  }
     };
+
+
+lldb::addr_t  MulleObjCTrampolineHandler::LookupFunctionSymbol( const lldb::ProcessSP &process_sp,
+                                                                const char *name)
+{
+   // Look up the addresses for the objc dispatch functions and cache them.  For
+   // now I'm inspecting the symbol
+   // names dynamically to figure out how to dispatch to them.  If it becomes
+   // more complicated than this we can
+   // turn the g_dispatch_functions char * array into a template table, and
+   // populate the DispatchFunction map
+   // from there.
+   
+   ConstString name_const_str( name);
+   const Symbol *msgSend_symbol =
+      m_objc_module_sp->FindFirstSymbolWithNameAndType(name_const_str,
+                                                    eSymbolTypeCode);
+   if (msgSend_symbol && msgSend_symbol->ValueIsAddress()) {
+      // FixMe: Make g_dispatch_functions static table of DispatchFunctions, and
+      // have the map be address->index.
+      // Problem is we also need to lookup the dispatch function.  For now we
+      // could have a side table of stret & non-stret
+      // dispatch functions.  If that's as complex as it gets, we're fine.
+      Target *target = process_sp ? &process_sp->GetTarget() : NULL;
+      
+      lldb::addr_t sym_addr =
+      msgSend_symbol->GetAddressRef().GetOpcodeLoadAddress(target);
+      return( sym_addr);
+   }
+   else
+   {
+      // why not log ?
+      if (process_sp->CanJIT()) {
+         process_sp->GetTarget().GetDebugger().GetErrorFile()->Printf(
+                                                                      "Could not find implementation for function \"%s\"\n",
+                                                                      name_const_str.AsCString());
+      }
+   }
+   return( LLDB_INVALID_ADDRESS);
+}
+
 
 MulleObjCTrampolineHandler::MulleObjCTrampolineHandler(
     const ProcessSP &process_sp, const ModuleSP &objc_module_sp)
@@ -124,8 +179,11 @@ MulleObjCTrampolineHandler::MulleObjCTrampolineHandler(
     if (process_sp->CanJIT()) {
       process_sp->GetTarget().GetDebugger().GetErrorFile()->Printf(
           "Could not find implementation lookup function \"%s\""
-          " step in through ObjC method dispatch will not work.\n",
-          get_impl_name.AsCString());
+          " in \"%s\" (%s)"
+          " stepping through ObjC method dispatch will not work.\n",
+          get_impl_name.AsCString(),
+          m_objc_module_sp->GetFileSpec().GetCString(),
+          class_getMethodImplementation ? "process failure" : "symbol not found");
     }
     return;
   } else  {
@@ -133,33 +191,19 @@ MulleObjCTrampolineHandler::MulleObjCTrampolineHandler(
         g_lookup_implementation_function_code;
   }
 
-  // Look up the addresses for the objc dispatch functions and cache them.  For
-  // now I'm inspecting the symbol
-  // names dynamically to figure out how to dispatch to them.  If it becomes
-  // more complicated than this we can
-  // turn the g_dispatch_functions char * array into a template table, and
-  // populate the DispatchFunction map
-  // from there.
+  lldb::addr_t sym_addr;
 
   for (size_t i = 0; i != llvm::array_lengthof(g_dispatch_functions); i++) {
-    ConstString name_const_str(g_dispatch_functions[i].name);
-    const Symbol *msgSend_symbol =
-        m_objc_module_sp->FindFirstSymbolWithNameAndType(name_const_str,
-                                                         eSymbolTypeCode);
-    if (msgSend_symbol && msgSend_symbol->ValueIsAddress()) {
-      // FixMe: Make g_dispatch_functions static table of DispatchFunctions, and
-      // have the map be address->index.
-      // Problem is we also need to lookup the dispatch function.  For now we
-      // could have a side table of stret & non-stret
-      // dispatch functions.  If that's as complex as it gets, we're fine.
-
-      lldb::addr_t sym_addr =
-          msgSend_symbol->GetAddressRef().GetOpcodeLoadAddress(target);
-
-      m_msgSend_map.insert(std::pair<lldb::addr_t, int>(sym_addr, i));
-    }
+     sym_addr = LookupFunctionSymbol( process_sp,
+                                      g_dispatch_functions[ i].name);
+     if( sym_addr != LLDB_INVALID_ADDRESS)
+        m_msgSend_map.insert(std::pair<lldb::addr_t, int>(sym_addr, i));
   }
+
+  m_classlookup_addr = LookupFunctionSymbol( process_sp,
+                                             "mulle_objc_unfailing_get_or_lookup_infraclass");
 }
+
 
 lldb::addr_t
 MulleObjCTrampolineHandler::SetupDispatchFunction(Thread &thread,
@@ -167,7 +211,7 @@ MulleObjCTrampolineHandler::SetupDispatchFunction(Thread &thread,
   ThreadSP thread_sp(thread.shared_from_this());
   ExecutionContext exe_ctx(thread_sp);
   DiagnosticManager diagnostics;
-  Log *log(lldb_private::GetLogIfAllCategoriesSet(LIBLLDB_LOG_STEP));
+  Log *log(lldb_private::GetLogIfAllCategoriesSet(MULLE_LOG));
 
   lldb::addr_t args_addr = LLDB_INVALID_ADDRESS;
   FunctionCaller *impl_function_caller = nullptr;
@@ -195,7 +239,7 @@ MulleObjCTrampolineHandler::SetupDispatchFunction(Thread &thread,
 
         if (!m_impl_code->Install(diagnostics, exe_ctx)) {
           if (log) {
-            log->Printf("Failed to install implementation lookup.");
+            log->Printf("Failed to install implementation lookup \"%s\".", g_lookup_implementation_function_name);
             diagnostics.Dump(log);
           }
           m_impl_code.reset();
@@ -318,6 +362,15 @@ MulleObjCTrampolineHandler::ReadIndirectJMPQ_X86_64( lldb::addr_t curr_pc)
 
 
 ThreadPlanSP
+MulleObjCTrampolineHandler::GetStepOutDispatchPlan( Thread &thread, bool stop_others)
+{
+   return( thread.QueueThreadPlanForStepOut( false, nullptr, false, stop_others,
+                                            eVoteYes, eVoteNoOpinion,
+                                            thread.GetSelectedFrameIndex()));
+}
+
+
+ThreadPlanSP
 MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread, bool stop_others)
 {
    ThreadPlanSP ret_plan_sp;
@@ -325,6 +378,25 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread, bool sto
    lldb::addr_t indirect_pc;
    DispatchFunction this_dispatch;
    bool found_it;
+   
+   Log *log(lldb_private::GetLogIfAllCategoriesSet (MULLE_LOG));
+
+   if( CanStepOver())
+   {
+      if( curr_pc == m_classlookup_addr)
+      {
+         if (log)
+            log->Printf( "Step out of class lookup.");
+         
+         ret_plan_sp.reset( new ThreadPlanStepOut(
+                  thread,
+                  nullptr,
+                  false, stop_others, eVoteYes,
+                  eVoteNoOpinion, thread.GetSelectedFrameIndex(),
+                  eLazyBoolNo));
+         return( ret_plan_sp);
+      }
+   }
    
    // First step is to look and see if we are in one of the known ObjC dispatch functions.  We've already compiled
    // a table of same, so consult it.
@@ -341,18 +413,18 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread, bool sto
       
       if( indirect_pc != LLDB_INVALID_ADDRESS)
       {
-         // Next check to see if we are in a vtable region:
+         // and consult again for indirect_pc
          found_it = GetDispatchFunctionForPCViaMap( indirect_pc, this_dispatch);
       }
    }
    
    if( ! found_it)
    {
+      if (log)
+         log->Printf( "Unknown dispatch address 0x%llx.", curr_pc);
       // fprintf( stderr, "*unknown dispatch*\n");
       return ret_plan_sp;
    }
-   
-   Log *log(lldb_private::GetLogIfAllCategoriesSet (LIBLLDB_LOG_STEP));
    
    // We are decoding a method dispatch.
    // First job is to pull the arguments out:
@@ -364,8 +436,11 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread, bool sto
    if (process_sp)
       abi = process_sp->GetABI().get();
    if (abi == NULL)
+   {
+      if (log)
+         log->Printf( "Unknown ABI.");
       return ret_plan_sp;
-   
+   }
    TargetSP target_sp (thread.CalculateTarget());
    
    ClangASTContext *clang_ast_context = target_sp->GetScratchClangASTContext();
@@ -404,6 +479,8 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread, bool sto
    if( ! success)
    {
       // fprintf( stderr, "fail getting argument values\n");
+      if (log)
+         log->Printf( "Problem getting argument values.");
       return ret_plan_sp;
    }
    
@@ -416,7 +493,6 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread, bool sto
    {
       if (log)
          log->Printf("Asked to step to dispatch to nil object, returning empty plan.");
-      // fprintf( stderr, "fail with nil obj\n");
       return ret_plan_sp;
    }
    

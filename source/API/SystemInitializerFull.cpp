@@ -323,11 +323,12 @@ void SystemInitializerFull::Initialize() {
   EmulateInstructionARM64::Initialize();
   SymbolFileDWARFDebugMap::Initialize();
   ItaniumABILanguageRuntime::Initialize();
-  AppleObjCRuntimeV2::Initialize();
-  AppleObjCRuntimeV1::Initialize();
   // @mulle-lldb@ Initialize runtime >
+  // initialize ahead of AppleRuntimes, so we get searched first
   MulleObjCRuntimeV1::Initialize();
   // @mulle-lldb@ Initialize runtime <
+  AppleObjCRuntimeV2::Initialize();
+  AppleObjCRuntimeV1::Initialize();
   SystemRuntimeMacOSX::Initialize();
   RenderScriptRuntime::Initialize();
   GoLanguageRuntime::Initialize();

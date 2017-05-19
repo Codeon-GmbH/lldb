@@ -74,7 +74,7 @@ public:
 
   // Get the "libobjc.A.dylib" module from the current target if we can find
   // it, also cache it once it is found to ensure quick lookups.
-  lldb::ModuleSP GetObjCModule();
+  lldb::ModuleSP GetMulleObjCRuntimeModule();
 
   // Sync up with the target
 
@@ -101,8 +101,9 @@ protected:
 
   bool CalculateHasNewLiteralsAndIndexing() override;
 
-  static bool MulleIsModuleObjCLibrary(const lldb::ModuleSP &module_sp);
-
+  static bool IsMulleObjCCodeModule(const lldb::ModuleSP &module_sp);
+  static bool IsMulleObjCRuntimeModule(const lldb::ModuleSP &module_sp);
+   
   static ObjCRuntimeVersions GetObjCVersion(Process *process,
                                             lldb::ModuleSP &objc_module_sp);
 
