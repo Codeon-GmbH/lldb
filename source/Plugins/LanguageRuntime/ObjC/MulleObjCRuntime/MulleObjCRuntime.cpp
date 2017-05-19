@@ -302,20 +302,78 @@ bool MulleObjCRuntime::IsMulleObjCRuntimeModule(const ModuleSP &module_sp) {
 }
 
 
-bool MulleObjCRuntime::IsSymbolARuntimeThunk(const Symbol &symbol) {
+static bool _IsSymbolARuntimeThunk(const Symbol &symbol) {
 
+  static ConstString g_c_01 = ConstString( "_mulle_objc_infraclass_inline_metacall_classid");
+  static ConstString g_c_02 = ConstString( "_mulle_objc_object_call2");
+  static ConstString g_c_03 = ConstString( "_mulle_objc_object_call2_empty_cache");
+  static ConstString g_c_04 = ConstString( "_mulle_objc_object_call2_needs_cache");
+  static ConstString g_c_05 = ConstString( "_mulle_objc_object_call_class");
+  static ConstString g_c_06 = ConstString( "_mulle_objc_object_call_class_needs_cache");
+  static ConstString g_c_07 = ConstString( "_mulle_objc_object_call_uncached_class");
+  static ConstString g_c_08 = ConstString( "_mulle_objc_object_inline_call_classid");
+  static ConstString g_c_09 = ConstString( "_mulle_objc_object_unfailing_call_methodid");
+  static ConstString g_c_10 = ConstString( "mulle_objc_infraclass_inline_metacall_classid");
+  static ConstString g_c_11 = ConstString( "mulle_objc_infraclass_metacall_classid");
+  static ConstString g_c_12 = ConstString( "mulle_objc_object_call");
+  static ConstString g_c_13 = ConstString( "mulle_objc_object_call_classid");
+  static ConstString g_c_14 = ConstString( "mulle_objc_object_constant_methodid_call");
+  static ConstString g_c_15 = ConstString( "mulle_objc_object_inline_call_classid");
+  static ConstString g_c_16 = ConstString( "mulle_objc_object_inline_constant_methodid_call");
+  static ConstString g_c_17 = ConstString( "mulle_objc_object_inline_variable_methodid_call");
+  static ConstString g_c_18 = ConstString( "mulle_objc_object_variable_methodid_call");
+  
   ConstString symbol_name = symbol.GetName();
 
-   fprintf( stderr, "IsSymbolARuntimeThunk \"%s\": ",
-            symbol.GetName().AsCString());
-  
-  if( ! ConstString::Compare( symbol_name, ConstString( "_mulle_objc_object_call_class_needs_cache"), true))
-  {
-    fprintf( stderr, "YES\n");
+  if( ConstString::Equals( symbol_name, g_c_01, true))
     return( true);
-  }
-  fprintf( stderr, "NO\n");
+  if( ConstString::Equals( symbol_name, g_c_02, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_03, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_04, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_05, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_06, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_07, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_08, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_09, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_10, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_11, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_12, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_13, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_14, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_15, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_16, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_17, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_18, true))
+    return( true);
+   
   return( false);
+}
+
+
+bool MulleObjCRuntime::IsSymbolARuntimeThunk(const Symbol &symbol) {
+
+  bool   flag;
+  
+  flag = _IsSymbolARuntimeThunk( symbol);
+//  fprintf( stderr, "\"%s\" is %s Thunk", symbol.GetName().GetCString(),
+//   flag ? "a" : "not a");
+  return( flag);
 }
 
 
@@ -332,8 +390,8 @@ bool MulleObjCRuntime::IsMulleObjCCodeModule(const ModuleSP &module_sp) {
                            ConstString( "__load_mulle_objc"),
                            eSymbolTypeCode, contexts))
   {
-    fprintf( stderr, "MulleObjC code at \"%s\"!!\n",
-            module_sp->GetFileSpec().GetFilename().AsCString());
+//    fprintf( stderr, "MulleObjC code at \"%s\"!!\n",
+//            module_sp->GetFileSpec().GetFilename().AsCString());
     return true;
   }
   return false;
@@ -370,7 +428,6 @@ ThreadPlanSP MulleObjCRuntime::GetStepThroughTrampolinePlan(Thread &thread,
                                                             bool stop_others) {
   ThreadPlanSP thread_plan_sp;
    
-  fprintf( stderr, "GetStepThroughTrampolinePlan called\n");
   if (m_objc_trampoline_handler_ap.get())
     thread_plan_sp = m_objc_trampoline_handler_ap->GetStepThroughDispatchPlan(
         thread, return_stack_id, stop_others);

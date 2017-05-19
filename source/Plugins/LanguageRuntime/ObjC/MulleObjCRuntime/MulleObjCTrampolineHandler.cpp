@@ -632,6 +632,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
     * At this point we "know" that we are going to step through, either directly
     * or via that trampoline thingy... so since out message sender is not a 
     * true trampoline but a c-function, we need to set a breakpoint
+    * (this is done better with the thunk code)
     */
    // SetBreakpointForReturn( thread, stackid);
    

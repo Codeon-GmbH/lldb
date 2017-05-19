@@ -88,8 +88,8 @@ bool ThreadPlanShouldStopHere::DefaultShouldStopHereCallback(
   // https://github.com/apple/swift-lldb/blob/stable/source/Target/ThreadPlanShouldStopHere.cpp
   // (thx to jim ingham)
   // Check whether the frame we are in is a language runtime thunk, only for
-  // step out:
-  if (operation == eFrameCompareOlder) {
+  // step out (or same parent):
+  if (operation == eFrameCompareOlder || operation == eFrameCompareSameParent) {
     Symbol *symbol = frame->GetSymbolContext(eSymbolContextSymbol).symbol;
     if (symbol) {
       LanguageRuntime *language_runtime;
