@@ -14,7 +14,7 @@
 MULLE_OBJC_VERSION_BRANCH="40"
 LLVM_VERSION="4.0.0"
 CLANG_VERSION="4.0.0.0"
-LLDB_VERSION="4.0.0.2"
+LLDB_VERSION="4.0.0.3"
 
 CMAKE_VERSION_MAJOR="3"
 CMAKE_VERSION_MINOR="5"
@@ -642,16 +642,21 @@ download_clang()
 {
    if [ ! -d "${CLANG_DIR}" ]
    then
-      if [ ! -f mulle-clang.tgz ]
+      local filename
+      local tmpname
+
+      filename="mulle-clang-${LLVM_VERSION}.tgz"
+      tmpname="_mulle-clang-${LLVM_VERSION}.tgz"
+      if [ ! -f "${filename}" ]
       then
          log_verbose "Downloading mulle-clang from \"${CLANG_ARCHIVE}\" ..."
-         exekutor curl -L -C- -o _mulle-clang.tgz "${CLANG_ARCHIVE}"  || fail "curl failed"
-         exekutor tar tfz _mulle-clang.tgz > /dev/null || fail "tar archive corrupt"
-         exekutor mv _mulle-clang.tgz mulle-clang.tgz  || exit 1
+         exekutor curl -L -C- -o "${tmpname}" "${CLANG_ARCHIVE}"  || fail "curl failed"
+         exekutor tar tfz "${tmpname}" > /dev/null || fail "tar archive corrupt"
+         exekutor mv "${tmpname}" "${filename}"  || exit 1
       fi
 
       log_verbose "Unpacking into \"${CLANG_DIR}\" ..."
-      exekutor tar xfz mulle-clang.tgz || fail "tar archive corrupt"
+      exekutor tar xfz "${filename}" || fail "tar archive corrupt"
       exekutor mkdir -p "`dirname -- "${CLANG_DIR}"`" 2> /dev/null || exit 1
       exekutor mv mulle-clang-${CLANG_VERSION} "${CLANG_DIR}" || exit 1
    else
@@ -664,16 +669,21 @@ download_lldb()
 {
    if [ ! -d "${LLDB_DIR}" ]
    then
-      if [ ! -f mulle-lldb.tgz ]
+      local filename
+      local tmpname
+
+      filename="mulle-lldb-${LLVM_VERSION}.tgz"
+      tmpname="_mulle-lldb-${LLVM_VERSION}.tgz"
+      if [ ! -f "${filename}" ]
       then
          log_verbose "Downloading mulle-lldb from \"${LLDB_ARCHIVE}\" ..."
-         exekutor curl -L -C- -o _mulle-lldb.tgz "${LLDB_ARCHIVE}"  || fail "curl failed"
-         exekutor tar tfz _mulle-lldb.tgz > /dev/null || fail "tar archive corrupt"
-         exekutor mv _mulle-lldb.tgz mulle-lldb.tgz  || exit 1
+         exekutor curl -L -C- -o "${tmpname}" "${LLDB_ARCHIVE}"  || fail "curl failed"
+         exekutor tar tfz "${tmpname}" > /dev/null || fail "tar archive corrupt"
+         exekutor mv "${tmpname}" "${filename}"  || exit 1
       fi
 
       log_verbose "Unpacking into \"${LLDB_DIR}\" ..."
-      exekutor tar xfz mulle-lldb.tgz || fail "tar archive corrupt"
+      exekutor tar xfz "${filename}" || fail "tar archive corrupt"
       exekutor mkdir -p "`dirname -- "${LLDB_DIR}"`" 2> /dev/null || exit 1
       exekutor mv mulle-lldb-${LLDB_VERSION} "${LLDB_DIR}" || exit 1
    else

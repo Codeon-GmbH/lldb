@@ -14,6 +14,7 @@
 // Project includes
 #include "MulleThreadPlanStepThroughObjCTrampoline.h"
 #include "MulleObjCTrampolineHandler.h"
+#include "lldb/Core/Log.h"
 #include "lldb/Expression/DiagnosticManager.h"
 #include "lldb/Expression/FunctionCaller.h"
 #include "lldb/Expression/UtilityFunction.h"
@@ -23,7 +24,6 @@
 #include "lldb/Target/Thread.h"
 #include "lldb/Target/ThreadPlanRunToAddress.h"
 #include "lldb/Target/ThreadPlanStepOut.h"
-#include "lldb/Utility/Log.h"
 
 using namespace lldb;
 using namespace lldb_private;

@@ -9,7 +9,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "MulleObjCRuntimeV1.h"
-#include "MulleObjCDeclVendor.h"
 #include "MulleObjCTrampolineHandler.h"
 
 #include "clang/AST/Type.h"
