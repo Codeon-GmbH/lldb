@@ -236,7 +236,7 @@ void MulleObjCRuntimeV1::ClassDescriptorV1::Initialize(ObjCISA isa,
    else
       m_name = ConstString();
    
-   // @mulle-objc@ : get instance_and_header_size
+   // get instance_and_header_size
    m_instance_size = (size_t) process_sp->ReadPointerFromMemory( isa + 8 * ptr_size, error);
    if (error.Fail())
    {
@@ -245,7 +245,7 @@ void MulleObjCRuntimeV1::ClassDescriptorV1::Initialize(ObjCISA isa,
       return;
    }
    
-   // @mulle-objc@ : subtract header size
+   // subtract header size
    m_instance_size -= ptr_size * 2;
    
    // fprintf( stderr, "Add class \"%s\" for isa=0x%llx with m_isa=0x%llx, m_parent_isa=0x%llx\n", m_name.AsCString(), (long long) isa, (long long) m_isa, (long long) m_parent_isa);

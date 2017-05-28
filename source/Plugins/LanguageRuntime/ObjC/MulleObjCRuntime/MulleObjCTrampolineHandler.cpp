@@ -583,7 +583,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
          // Note, it isn't a fatal error not to be able to get the address from the object, since this might
          // be a "tagged pointer" which isn't a real object, but rather some word length encoded dingus.
          
-         // @mulle-objc@: figure out isa from object argument
+         // figure out isa from object argument
 
          if( (obj_addr & 0x7) == 0)  // quick tagged pointer check
          {
