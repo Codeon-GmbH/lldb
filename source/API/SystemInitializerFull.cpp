@@ -61,6 +61,9 @@
 #include "Plugins/LanguageRuntime/CPlusPlus/ItaniumABI/ItaniumABILanguageRuntime.h"
 #include "Plugins/LanguageRuntime/Go/GoLanguageRuntime.h"
 #include "Plugins/LanguageRuntime/Java/JavaLanguageRuntime.h"
+// @mulle-lldb@ Initialize runtime >
+#include "Plugins/LanguageRuntime/ObjC/MulleObjCRuntime/MulleObjCRuntimeV1.h"
+// @mulle-lldb@ Initialize runtime <
 #include "Plugins/LanguageRuntime/ObjC/AppleObjCRuntime/AppleObjCRuntimeV1.h"
 #include "Plugins/LanguageRuntime/ObjC/AppleObjCRuntime/AppleObjCRuntimeV2.h"
 #include "Plugins/LanguageRuntime/RenderScript/RenderScriptRuntime/RenderScriptRuntime.h"
