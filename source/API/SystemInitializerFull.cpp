@@ -318,6 +318,10 @@ void SystemInitializerFull::Initialize() {
   EmulateInstructionARM64::Initialize();
   SymbolFileDWARFDebugMap::Initialize();
   ItaniumABILanguageRuntime::Initialize();
+  // @mulle-lldb@ Initialize runtime >
+  // initialize ahead of AppleRuntimes, so we get searched first
+  MulleObjCRuntimeV1::Initialize();
+  // @mulle-lldb@ Initialize runtime <
   AppleObjCRuntimeV2::Initialize();
   AppleObjCRuntimeV1::Initialize();
   SystemRuntimeMacOSX::Initialize();

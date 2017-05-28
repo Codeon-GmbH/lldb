@@ -96,7 +96,7 @@ void ThreadPlanStepThrough::LookForPlanToStepThroughFromCurrentPC() {
         m_thread.GetProcess()->GetObjCLanguageRuntime();
     if (objc_runtime)
       m_sub_plan_sp =
-          objc_runtime->GetStepThroughTrampolinePlan(m_thread, m_stop_others);
+          objc_runtime->GetStepThroughTrampolinePlan(m_thread, m_return_stack_id, m_stop_others);
   }
 
   Log *log(lldb_private::GetLogIfAllCategoriesSet(LIBLLDB_LOG_STEP));
