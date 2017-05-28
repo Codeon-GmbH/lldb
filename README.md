@@ -10,9 +10,7 @@ runtime. The debugger can be used to debug Objective-C code produced by the
 
 ## Install
 
-### Manually
-
-* [INSTALL.txt](NSTALL.txt)
+* [INSTALL.txt](INSTALL.txt)
 
 
 ## Author
