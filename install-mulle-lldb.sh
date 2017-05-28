@@ -14,7 +14,7 @@
 MULLE_OBJC_VERSION_BRANCH="40"
 LLVM_VERSION="4.0.0"
 CLANG_VERSION="4.0.0.0"
-LLDB_VERSION="4.0.0.0"
+LLDB_VERSION="4.0.0.2"
 
 CMAKE_VERSION_MAJOR="3"
 CMAKE_VERSION_MINOR="5"
@@ -682,6 +682,39 @@ download_lldb()
 }
 
 
+download_mulle_lldb()
+{
+   log_info "Downloading llvm ..."
+
+   download_llvm
+
+   log_info "Downloading mulle-clang ..."
+
+   download_clang
+
+   #
+   # now we can derive some more values
+   #
+   MULLE_CLANG_VERSION="`get_mulle_clang_version "${CLANG_DIR}"`" || exit 1
+   CLANG_VENDOR="`get_clang_vendor "${CLANG_DIR}"`" || exit 1
+
+   log_verbose "CLANG_VENDOR=${CLANG_VENDOR}"
+   log_verbose "MULLE_CLANG_VERSION=${MULLE_CLANG_VERSION}"
+
+   log_info "Downloading mulle-lldb ..."
+
+   download_lldb
+
+   #
+   # now we can derive some more values
+   #
+   MULLE_LLDB_VERSION="`get_mulle_lldb_version "${LLDB_DIR}"`" || exit 1
+
+   log_verbose "MULLE_LLDB_VERSION=${MULLE_LLDB_VERSION}"
+}
+
+
+
 #
 # on Debian, llvm doesn't build properly with clang
 # use gcc, which is the default compiler for cmake
@@ -725,60 +758,6 @@ build_llvm()
 }
 
 
-download_mulle_clang()
-{
-   log_info "Downloading mulle-clang ..."
-
-   if [ "${BUILD_CLANG}" != "NO" ]
-   then
-      download_clang
-
-      #
-      # now we can derive some more values
-      #
-      MULLE_CLANG_VERSION="`get_mulle_clang_version "${CLANG_DIR}"`" || exit 1
-      CLANG_VENDOR="`get_clang_vendor "${CLANG_DIR}"`" || exit 1
-
-      log_verbose "CLANG_VENDOR=${CLANG_VENDOR}"
-      log_verbose "MULLE_CLANG_VERSION=${MULLE_CLANG_VERSION}"
-   fi
-
-# should check if llvm is installed, if yes
-# check proper version and then use it
-   if [ "${BUILD_LLVM}" != "NO" ]
-   then
-      download_llvm
-   fi
-}
-
-
-download_mulle_lldb()
-{
-# try to download most problematic first
-# instead of downloading llvm first for an hour...
-   log_info "Downloading mulle-lldb ..."
-
-   if [ "${BUILD_LLDB}" != "NO" ]
-   then
-      download_lldb
-
-      #
-      # now we can derive some more values
-      #
-      MULLE_LLDB_VERSION="`get_mulle_lldb_version "${CLANG_DIR}"`" || exit 1
-
-      log_verbose "MULLE_LLDB_VERSION=${MULLE_LLDB_VERSION}"
-   fi
-
-# should check if llvm is installed, if yes
-# check proper version and then use it
-   if [ "${BUILD_CLANG}" != "NO" ]
-   then
-      download_clang
-   fi
-}
-
-
 
 build_mulle_lldb()
 {
@@ -805,26 +784,11 @@ is likely to get reused. If this is not what you want, [CTRL]-[C] now and do:
       fi
    fi
 
-# should check if llvm is installed, if yes
-# check proper version and then use it
-   if [ "${BUILD_LLVM}" != "NO" ]
+   if [ "${INSTALL_LLVM}" != "NO" ]
    then
-      if [ "${INSTALL_LLVM}" != "NO" ]
-      then
-         build_llvm install
-      else
-         build_llvm
-      fi
-   fi
-
-   if [ "${BUILD_CLANG}" != "NO" ]
-   then
-      build_clang install
-   fi
-
-   if [ "${BUILD_LLDB}" != "NO" ]
-   then
-      build_lldb install
+      build_llvm install
+   else
+      build_llvm
    fi
 }
 
@@ -833,24 +797,11 @@ _build_mulle_lldb()
 {
 # should check if llvm is installed, if yes
 # check proper version and then use it
-   if [ "${BUILD_LLVM}" != "NO" ]
+   if [ "${INSTALL_LLVM}" != "NO" ]
    then
-      if [ "${INSTALL_LLVM}" != "NO" ]
-      then
-         _build_llvm install
-      else
-         _build_llvm
-      fi
-   fi
-
-   if [ "${BUILD_CLANG}" != "NO" ]
-   then
-      _build_clang install
-   fi
-
-   if [ "${BUILD_LLDB}" != "NO" ]
-   then
-      _build_lldb install
+      _build_llvm install
+   else
+      _build_llvm
    fi
 }
 
