@@ -66,6 +66,7 @@ set( LLDB_USED_LIBS
   lldbPluginUnwindAssemblyInstEmulation
   lldbPluginUnwindAssemblyX86
   lldbPluginAppleObjCRuntime
+  lldbPluginMulleObjCRuntime
   lldbPluginCXXItaniumABI
   lldbPluginInstructionARM
   lldbPluginInstructionARM64
