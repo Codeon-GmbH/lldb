@@ -223,7 +223,7 @@ MulleObjCTrampolineHandler::SetupDispatchFunction(Thread &thread,
 
     if (!m_impl_code.get()) {
       if (m_lookup_implementation_function_code != NULL) {
-        Status error;
+        Error error;
         m_impl_code.reset(exe_ctx.GetTargetRef().GetUtilityFunctionForLanguage(
             m_lookup_implementation_function_code, eLanguageTypeObjC,
             g_lookup_implementation_function_name, error));
@@ -255,7 +255,7 @@ MulleObjCTrampolineHandler::SetupDispatchFunction(Thread &thread,
           thread.GetProcess()->GetTarget().GetScratchClangASTContext();
       CompilerType clang_void_ptr_type =
           clang_ast_context->GetBasicType(eBasicTypeVoid).GetPointerType();
-      Status error;
+      Error error;
 
       impl_function_caller = m_impl_code->MakeFunctionCaller(
           clang_void_ptr_type, dispatch_values, thread_sp, error);
@@ -322,7 +322,7 @@ MulleObjCTrampolineHandler::ReadIndirectJMPQ_X86_64( lldb::addr_t curr_pc)
    } instruction;
 #pragma pack( pop)
    
-   Status         error;
+   Error          error;
    size_t         bytes_read;
    void           *f;
    lldb::addr_t   table_adr;

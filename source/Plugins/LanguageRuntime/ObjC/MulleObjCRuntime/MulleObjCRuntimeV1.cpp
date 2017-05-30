@@ -15,11 +15,11 @@
 
 #include "lldb/Breakpoint/BreakpointLocation.h"
 #include "lldb/Core/ConstString.h"
+#include "lldb/Core/Error.h"
 #include "lldb/Core/Log.h"
 #include "lldb/Core/Module.h"
 #include "lldb/Core/PluginManager.h"
 #include "lldb/Core/Scalar.h"
-#include "lldb/Core/Status.h"
 #include "lldb/Core/StreamString.h"
 #include "lldb/Expression/DiagnosticManager.h"
 #include "lldb/Expression/FunctionCaller.h"
@@ -143,7 +143,7 @@ UtilityFunction *MulleObjCRuntimeV1::CreateObjectChecker(const char *name) {
                   name);
   assert(strformatsize < (int)sizeof(buf->contents));
 
-  Status error;
+  Error error;
   return GetTargetRef().GetUtilityFunctionForLanguage(
       buf->contents, eLanguageTypeObjC, name, error);
 }
@@ -171,7 +171,7 @@ void MulleObjCRuntimeV1::ClassDescriptorV1::Initialize(ObjCISA isa,
    
    m_valid = true;
    
-   Status error;
+   Error error;
    
    uint32_t ptr_size = process_sp->GetAddressByteSize();
    
@@ -320,7 +320,7 @@ lldb::addr_t MulleObjCRuntimeV1::CallDangerousGetClassTableFunction( Process *pr
    return_value.SetCompilerType( clang_void_ptr_type);
 
    
-   Status error;
+   Error error;
    dangerous_function.reset(exe_ctx.GetTargetRef().GetUtilityFunctionForLanguage(
                                                                                  g_dangerous_function_code,  eLanguageTypeObjC,
                                                                                  g_dangerous_function_name, error));
@@ -451,7 +451,7 @@ void MulleObjCRuntimeV1::UpdateISAToDescriptorMapIfNeeded() {
       //    mulle_atomic_pointer_t   value;
       // };
       
-      Status error;
+      Error error;
       DataBufferHeap buffer(1024, 0);
       
       // assume 64 bit max for now...
