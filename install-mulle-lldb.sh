@@ -1,4 +1,4 @@
-#! /bin/sh -x
+#! /bin/sh
 #
 # mulle-lldb installer
 # (c) 2017 Codeon GmbH, coded by Nat!
@@ -7,13 +7,13 @@
 #
 
 #
-# The debugger is built differently: by the book
-# the book sucks though...
+# The debugger is built differently: by the book.
+# The book sucks though...
 #
 # various versions
 MULLE_OBJC_VERSION_BRANCH="40"
 LLVM_VERSION="4.0.0"
-CLANG_VERSION="4.0.0.0"
+CLANG_VERSION="4.0.0.4"
 LLDB_VERSION="4.0.0.3"
 
 CMAKE_VERSION_MAJOR="3"
