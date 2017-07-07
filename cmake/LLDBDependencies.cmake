@@ -52,7 +52,9 @@ set( LLDB_USED_LIBS
   lldbPluginUnwindAssemblyInstEmulation
   lldbPluginUnwindAssemblyX86
   lldbPluginAppleObjCRuntime
+# @mulle-objc@ >
   lldbPluginMulleObjCRuntime
+# @mulle-objc@ <
   lldbPluginRenderScriptRuntime
   lldbPluginLanguageRuntimeGo
   lldbPluginLanguageRuntimeJava

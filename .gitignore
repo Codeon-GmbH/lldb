@@ -24,7 +24,7 @@
 .*.swp
 .sw?
 # OS X specific files.
-.DS_store
+.DS_Store
 DerivedData/
 
 # Remote build configuration files.

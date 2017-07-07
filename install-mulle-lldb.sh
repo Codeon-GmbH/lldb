@@ -604,8 +604,6 @@ _llvm_module_download()
 
 download_llvm()
 {
-   log_info "Downloading llvm ..."
-
    if [ ! -d "${LLVM_DIR}" ]
    then
       log_verbose "Downloading llvm from \"${LLVM_ARCHIVE}\" ..."
@@ -696,6 +694,11 @@ download_mulle_lldb()
 {
    log_info "Downloading llvm ..."
 
+   if [ ! -d "${SRC_DIR}" ]
+   then
+      mkdir -p "${SRC_DIR}" || exit 1
+   fi
+
    download_llvm
 
    log_info "Downloading mulle-clang ..."
@@ -724,13 +727,27 @@ download_mulle_lldb()
 }
 
 
-
 #
 # on Debian, llvm doesn't build properly with clang
 # use gcc, which is the default compiler for cmake
 #
+APT_DEPENDENCIES="build-essential subversion swig python2.7-dev libedit-dev libncurses5-dev"
+
 _build_llvm()
 {
+   osrelease="`lsb_release -s -c`" 2> /dev/null
+
+   case "${osrelease}" in
+      "")
+         log_warning "You may need to install the following packages on your system:" >&2
+         log_warning "${APT_DEPENDENCIES}" >&2
+      ;;
+
+      *)
+         sudo apt-get install ${APT_DEPENDENCIES}
+      ;;
+   esac
+
    #
    # Build llvm
    #
@@ -766,7 +783,6 @@ build_llvm()
 
    _build_llvm "$@"
 }
-
 
 
 build_mulle_lldb()
