@@ -21,7 +21,7 @@ add_lldb_library(lldbPluginObjCLanguage PLUGIN
     lldbTarget
     lldbUtility
 # @mulle-objc@ >
--  lldbPluginMulleObjCRuntime
+    lldbPluginMulleObjCRuntime
 # @mulle-objc@ <
     lldbPluginAppleObjCRuntime
 )

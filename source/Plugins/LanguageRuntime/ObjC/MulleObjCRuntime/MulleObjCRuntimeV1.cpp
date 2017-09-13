@@ -14,13 +14,9 @@
 #include "clang/AST/Type.h"
 
 #include "lldb/Breakpoint/BreakpointLocation.h"
-#include "lldb/Core/ConstString.h"
-#include "lldb/Core/Error.h"
-#include "lldb/Core/Log.h"
 #include "lldb/Core/Module.h"
 #include "lldb/Core/PluginManager.h"
 #include "lldb/Core/Scalar.h"
-#include "lldb/Core/StreamString.h"
 #include "lldb/Expression/DiagnosticManager.h"
 #include "lldb/Expression/FunctionCaller.h"
 #include "lldb/Expression/UtilityFunction.h"
@@ -31,6 +27,10 @@
 #include "lldb/Target/RegisterContext.h"
 #include "lldb/Target/Target.h"
 #include "lldb/Target/Thread.h"
+#include "lldb/Utility/ConstString.h"
+#include "lldb/Utility/Log.h"
+#include "lldb/Utility/Status.h"
+#include "lldb/Utility/StreamString.h"
 
 #include <vector>
 
@@ -135,6 +135,7 @@ struct BufStruct {
 UtilityFunction *MulleObjCRuntimeV1::CreateObjectChecker(const char *name) {
   std::unique_ptr<BufStruct> buf(new BufStruct);
 
+#ifndef NDEBUG
   int strformatsize = snprintf(&buf->contents[0], sizeof(buf->contents),
 "extern \"C\"\n"
 "{\n"
@@ -142,8 +143,9 @@ UtilityFunction *MulleObjCRuntimeV1::CreateObjectChecker(const char *name) {
 "}",
                   name);
   assert(strformatsize < (int)sizeof(buf->contents));
+#endif
 
-  Error error;
+  Status error;
   return GetTargetRef().GetUtilityFunctionForLanguage(
       buf->contents, eLanguageTypeObjC, name, error);
 }
@@ -167,75 +169,75 @@ void MulleObjCRuntimeV1::ClassDescriptorV1::Initialize(ObjCISA isa,
       m_valid = false;
       return;
    }
-   
-   
+
+
    m_valid = true;
-   
-   Error error;
-   
+
+   Status error;
+
    uint32_t ptr_size = process_sp->GetAddressByteSize();
-   
+
    // get isa of class
    m_isa = process_sp->ReadPointerFromMemory( isa - ptr_size, error);
-   
+
    if (error.Fail())
    {
       // fprintf( stderr, "fail m_isa 0x%llx, isa 0x%llx\n", (long long) m_isa, (long long) isa);
       m_valid = false;
       return;
    }
-   
-   
+
+
    if (!IsPointerValid(m_isa,ptr_size))
    {
       // fprintf( stderr, "fail isa\n");
       m_valid = false;
       return;
    }
-   
+
    // get superclass or what ?
    m_parent_isa = process_sp->ReadPointerFromMemory( isa + 5 * ptr_size, error);
-   
+
    if (error.Fail())
    {
       // fprintf( stderr, "fail superclass\n");
       m_valid = false;
       return;
    }
-   
+
    if (!IsPointerValid(m_parent_isa,ptr_size,true))
    {
       // fprintf( stderr, "fail superclass 2\n");
       m_valid = false;
       return;
    }
-   
+
    // get name
    lldb::addr_t name_ptr = process_sp->ReadPointerFromMemory( isa + 3 * ptr_size,error);
-   
+
    if (error.Fail())
    {
       // fprintf( stderr, "fail name offset\n");
       m_valid = false;
       return;
    }
-   
+
    lldb::DataBufferSP buffer_sp(new DataBufferHeap(1024, 0));
-   
+
    size_t count = process_sp->ReadCStringFromMemory(name_ptr, (char*)buffer_sp->GetBytes(), 1024, error);
-   
+
    if (error.Fail())
    {
       // fprintf( stderr, "fail name read: 0x%llx\n", (unsigned long long) name_ptr);
       m_valid = false;
       return;
    }
-   
+
    if (count)
       m_name = ConstString((char*)buffer_sp->GetBytes());
    else
       m_name = ConstString();
-   
+
    // get instance_and_header_size
    m_instance_size = (size_t) process_sp->ReadPointerFromMemory( isa + 8 * ptr_size, error);
    if (error.Fail())
@@ -244,12 +246,12 @@ void MulleObjCRuntimeV1::ClassDescriptorV1::Initialize(ObjCISA isa,
       m_valid = false;
       return;
    }
-   
+
    // subtract header size
    m_instance_size -= ptr_size * 2;
-   
+
    // fprintf( stderr, "Add class \"%s\" for isa=0x%llx with m_isa=0x%llx, m_parent_isa=0x%llx\n", m_name.AsCString(), (long long) isa, (long long) m_isa, (long long) m_parent_isa);
-   
+
    m_process_wp = lldb::ProcessWP(process_sp);
 }
 
@@ -298,7 +300,7 @@ lldb::addr_t MulleObjCRuntimeV1::CallDangerousGetClassTableFunction( Process *pr
    options.SetUnwindOnError(true);
    options.SetIgnoreBreakpoints(true);
    options.SetStopOthers(true);  // placebo...
-   
+
    ThreadSP thread_sp = m_process->GetThreadList().GetExpressionExecutionThread();
    if (!thread_sp)
    {
@@ -311,16 +313,16 @@ lldb::addr_t MulleObjCRuntimeV1::CallDangerousGetClassTableFunction( Process *pr
    }
    TargetSP target_sp( thread_sp->CalculateTarget());
    thread_sp->CalculateExecutionContext(exe_ctx);
-   
+
    ClangASTContext *clang_ast_context = target_sp->GetScratchClangASTContext();
-   
+
    Value return_value;
    CompilerType clang_void_ptr_type =  clang_ast_context->GetBasicType(eBasicTypeVoid).GetPointerType();
    return_value.SetValueType(Value::eValueTypeScalar);
    return_value.SetCompilerType( clang_void_ptr_type);
 
-   
-   Error error;
+
+   Status error;
    dangerous_function.reset(exe_ctx.GetTargetRef().GetUtilityFunctionForLanguage(
                                                                                  g_dangerous_function_code,  eLanguageTypeObjC,
                                                                                  g_dangerous_function_name, error));
@@ -335,7 +337,7 @@ lldb::addr_t MulleObjCRuntimeV1::CallDangerousGetClassTableFunction( Process *pr
       dangerous_function.reset();
       return( LLDB_INVALID_ADDRESS);
    }
-   
+
    if (!dangerous_function->Install(diagnostics, exe_ctx)) {
       if (log) {
          log->Printf("Failed to install get_dangerous_class_storage function.");
@@ -344,7 +346,7 @@ lldb::addr_t MulleObjCRuntimeV1::CallDangerousGetClassTableFunction( Process *pr
       dangerous_function.reset();
       return( LLDB_INVALID_ADDRESS);
    }
-   
+
    // Next make the runner function for our implementation utility function.
    impl_function_caller = dangerous_function->MakeFunctionCaller(
                                                                  clang_void_ptr_type, emptyList, thread_sp, error);
@@ -366,7 +368,7 @@ lldb::addr_t MulleObjCRuntimeV1::CallDangerousGetClassTableFunction( Process *pr
    // if other threads were calling into here, but actually it isn't because we
    // allocate a new args structure for
    // this call by passing args_addr = LLDB_INVALID_ADDRESS...
-   
+
    if (!impl_function_caller->WriteFunctionArguments(
                                                      exe_ctx, args_addr, emptyList, diagnostics)) {
       if (log) {
@@ -375,8 +377,8 @@ lldb::addr_t MulleObjCRuntimeV1::CallDangerousGetClassTableFunction( Process *pr
       }
       return( LLDB_INVALID_ADDRESS);
    }
-   
-   
+
+
    impl_function_caller = dangerous_function->GetFunctionCaller();
    // Run the function
    ExpressionResults results =
@@ -385,7 +387,7 @@ lldb::addr_t MulleObjCRuntimeV1::CallDangerousGetClassTableFunction( Process *pr
                                           options,
                                           diagnostics,
                                           return_value);
-   
+
    if (results != eExpressionCompleted) {
       if (log) {
          log->Printf("Error calling dangerous mulle functions.");
@@ -393,17 +395,17 @@ lldb::addr_t MulleObjCRuntimeV1::CallDangerousGetClassTableFunction( Process *pr
       }
       return 0;
    }
-   
+
    return( return_value.GetScalar().ULongLong());
 }
 
 
 lldb::addr_t MulleObjCRuntimeV1::GetISAHashTablePointer( Process *process) {
    ModuleSP objc_module_sp(GetMulleObjCRuntimeModule());
-      
+
    if (!objc_module_sp)
       return LLDB_INVALID_ADDRESS;
-   
+
    // that pointer is fluctuating!
    return CallDangerousGetClassTableFunction( process);
 }
@@ -415,26 +417,26 @@ lldb::addr_t MulleObjCRuntimeV1::GetISAHashTablePointer( Process *process) {
 void MulleObjCRuntimeV1::UpdateISAToDescriptorMapIfNeeded() {
    // TODO: implement HashTableSignature...
    Process *process = GetProcess();
-   
+
    if (process) {
       // Update the process stop ID that indicates the last time we updated the
       // map, whether it was successful or not.
       m_isa_to_descriptor_stop_id = process->GetStopID();
       Log *log(GetLogIfAllCategoriesSet(LIBLLDB_LOG_LANGUAGE));
-      
+
       ProcessSP process_sp = process->shared_from_this();
-      
+
       // reread images for Objective-C library, I don't know why
       ModuleSP objc_module_sp(GetMulleObjCRuntimeModule());
-      
+
       if (!objc_module_sp)
          return;
-      
+
       lldb::addr_t hash_table_ptr = GetISAHashTablePointer( process);
       if (hash_table_ptr == LLDB_INVALID_ADDRESS) {
          m_isa_to_descriptor_stop_id = UINT32_MAX;
       }
-      
+
       // Read the mulle_concurrent_hashtable struct:
       // __lldb_objc_get_dangerous_class_storage gives us
       //
@@ -450,63 +452,63 @@ void MulleObjCRuntimeV1::UpdateISAToDescriptorMapIfNeeded() {
       //    intptr_t                 hash;
       //    mulle_atomic_pointer_t   value;
       // };
-      
-      Error error;
+
+      Status error;
       DataBufferHeap buffer(1024, 0);
-      
+
       // assume 64 bit max for now...
       // why use m_process here, process up there ? and process_sp ???
-      
+
       const uint32_t addr_size   = m_process->GetAddressByteSize();
       const ByteOrder byte_order = m_process->GetByteOrder();
       lldb::addr_t  invalid;
-      
+
       switch( addr_size)
       {
          case 4 : invalid = (lldb::addr_t) INT32_MIN; break;
          case 8 : invalid = (lldb::addr_t) INT64_MIN; break;
          default : return;
       }
-      
+
       if (process->ReadMemory( hash_table_ptr, buffer.GetBytes(), addr_size * 2, error) !=
           addr_size * 2)
          return;
-      
+
       DataExtractor data(buffer.GetBytes(), buffer.GetByteSize(), byte_order,
                          addr_size);
-      
+
       // now read the storage structure first two fields
       lldb::offset_t  offset = addr_size;                // Skip n_hashs field
       uint64_t  size = data.GetPointer(&offset) + 1; // get mask add 1 for size
       uint64_t  data_size = size * (2 * addr_size);  // size + sizeof( entries)
       buffer.SetByteSize( data_size);
-      
+
       // read in entries en block, skip over n_hashs and mask
       if( process->ReadMemory( hash_table_ptr + 2 * addr_size , buffer.GetBytes(), data_size,
                               error) != data_size)
          return;
-      
+
       data.SetData( buffer.GetBytes(), buffer.GetByteSize(), byte_order);
-      
+
       offset = 0;
       for (uint32_t bucket_idx = 0; bucket_idx < size; ++bucket_idx)
       {
          const lldb::addr_t classid = data.GetPointer(&offset);
          const lldb::addr_t isa     = data.GetPointer(&offset);
-         
+
          if( classid == 0 || classid == invalid || isa == 0)
             continue;
-         
+
          if (!ISAIsCached(isa)) {
             ClassDescriptorSP descriptor_sp(
                                             new ClassDescriptorV1(isa, process_sp));
-            
+
             if (log && log->GetVerbose())
                log->Printf("MulleObjCRuntimeV1 added (ObjCISA)0x%" PRIx64
                            " from mulle-objc-runtime to "
                            "isa->descriptor cache",
                            isa);
-            
+
             AddClass(isa, descriptor_sp);
          }
       }

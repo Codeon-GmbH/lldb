@@ -17,9 +17,7 @@
 #include "MulleThreadPlanStepThroughObjCTrampoline.h"
 
 #include "lldb/Breakpoint/StoppointCallbackContext.h"
-#include "lldb/Core/ConstString.h"
 #include "lldb/Core/Debugger.h"
-#include "lldb/Core/Log.h"
 #include "lldb/Core/Module.h"
 #include "lldb/Core/StreamFile.h"
 #include "lldb/Core/Value.h"
@@ -38,6 +36,10 @@
 #include "lldb/Target/Thread.h"
 #include "lldb/Target/ThreadPlanRunToAddress.h"
 #include "lldb/Target/ThreadPlanStepOut.h"
+#include "lldb/Utility/ConstString.h"
+#include "lldb/Utility/FileSpec.h"
+#include "lldb/Utility/Log.h"
+#include "lldb/Utility/Status.h"
 
 #include "llvm/ADT/STLExtras.h"
 
@@ -82,7 +84,7 @@ const MulleObjCTrampolineHandler::DispatchFunction
        // hm hm
        // {"mulle_objc_object_inline_constant_methodid_call", false,  false, false },
        // {"mulle_objc_object_inline_variable_methodid_call", false,  false, false },
-       
+
        // calls to object  where class is fourth parameter
        // { "mulle_objc_object_call_class",              true,  false, false  },
        //       { "_mulle_objc_object_call_class_needs_cache", true,  false, false  },
@@ -112,7 +114,7 @@ lldb::addr_t  MulleObjCTrampolineHandler::LookupFunctionSymbol( const lldb::Proc
    // turn the g_dispatch_functions char * array into a template table, and
    // populate the DispatchFunction map
    // from there.
-   
+
    ConstString name_const_str( name);
    const Symbol *msgSend_symbol =
       m_objc_module_sp->FindFirstSymbolWithNameAndType(name_const_str,
@@ -124,7 +126,7 @@ lldb::addr_t  MulleObjCTrampolineHandler::LookupFunctionSymbol( const lldb::Proc
       // could have a side table of stret & non-stret
       // dispatch functions.  If that's as complex as it gets, we're fine.
       Target *target = process_sp ? &process_sp->GetTarget() : NULL;
-      
+
       lldb::addr_t sym_addr =
       msgSend_symbol->GetAddressRef().GetOpcodeLoadAddress(target);
       return( sym_addr);
@@ -223,7 +225,7 @@ MulleObjCTrampolineHandler::SetupDispatchFunction(Thread &thread,
 
     if (!m_impl_code.get()) {
       if (m_lookup_implementation_function_code != NULL) {
-        Error error;
+        Status error;
         m_impl_code.reset(exe_ctx.GetTargetRef().GetUtilityFunctionForLanguage(
             m_lookup_implementation_function_code, eLanguageTypeObjC,
             g_lookup_implementation_function_name, error));
@@ -255,7 +257,7 @@ MulleObjCTrampolineHandler::SetupDispatchFunction(Thread &thread,
           thread.GetProcess()->GetTarget().GetScratchClangASTContext();
       CompilerType clang_void_ptr_type =
           clang_ast_context->GetBasicType(eBasicTypeVoid).GetPointerType();
-      Error error;
+      Status error;
 
       impl_function_caller = m_impl_code->MakeFunctionCaller(
           clang_void_ptr_type, dispatch_values, thread_sp, error);
@@ -295,9 +297,9 @@ bool
 MulleObjCTrampolineHandler::GetDispatchFunctionForPCViaMap( lldb::addr_t curr_pc, DispatchFunction &this_dispatch)
 {
    MsgsendMap::iterator pos;
-   
+
    // fprintf( stderr, "%s PC: 0x%llx\n", __PRETTY_FUNCTION__, (unsigned long long) curr_pc);
-   
+
    pos = m_msgSend_map.find( curr_pc);
    if (pos != m_msgSend_map.end())
    {
@@ -321,21 +323,21 @@ MulleObjCTrampolineHandler::ReadIndirectJMPQ_X86_64( lldb::addr_t curr_pc)
       int32_t    offset;
    } instruction;
 #pragma pack( pop)
-   
-   Error          error;
+
+   Status         error;
    size_t         bytes_read;
    void           *f;
    lldb::addr_t   table_adr;
-   
+
    // fprintf( stderr, "%s PC: 0x%llx\n", __PRETTY_FUNCTION__, (unsigned long long) curr_pc);
-   
+
    ProcessSP process_sp = m_process_wp.lock();
    if( ! process_sp)
    {
       // fprintf( stderr, "fail process\n");
       return( LLDB_INVALID_ADDRESS);
    }
-   
+
    bytes_read = process_sp->ReadMemory( curr_pc, &instruction, sizeof( instruction), error);
    if( bytes_read != sizeof( instruction))
    {
@@ -347,7 +349,7 @@ MulleObjCTrampolineHandler::ReadIndirectJMPQ_X86_64( lldb::addr_t curr_pc)
       // fprintf( stderr, "fail opcode: %x\n", instruction.opcode);
       return( LLDB_INVALID_ADDRESS);
    }
-   
+
    // fprintf( stderr, "offset, 0x%x\n", instruction.offset);
    table_adr  = curr_pc + sizeof( instruction) + instruction.offset;
    bytes_read = process_sp->ReadMemory( table_adr, &f, sizeof( f), error);
@@ -417,7 +419,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
    lldb::addr_t indirect_pc;
    DispatchFunction this_dispatch;
    bool found_it;
-   
+
    Log *log(lldb_private::GetLogIfAllCategoriesSet (MULLE_LOG));
 
    if( CanStepOver())
@@ -426,7 +428,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
       {
          if (log)
             log->Printf( "Step out of class lookup.");
-         
+
          ret_plan_sp.reset( new ThreadPlanStepOut(
                   thread,
                   nullptr,
@@ -436,27 +438,27 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
          return( ret_plan_sp);
       }
    }
-   
+
    // First step is to look and see if we are in one of the known ObjC dispatch functions.  We've already compiled
    // a table of same, so consult it.
    found_it = GetDispatchFunctionForPCViaMap( curr_pc, this_dispatch);
-   
+
    // figure out the indirect address if PC is pointing to
    // a jump vector
-   
+
    if( ! found_it)
    {
       indirect_pc = ReadIndirectJMPQ_X86_64( curr_pc);
-      
+
       // fprintf( stderr, "indirect PC: 0x%llx\n", (unsigned long long) indirect_pc);
-      
+
       if( indirect_pc != LLDB_INVALID_ADDRESS)
       {
          // and consult again for indirect_pc
          found_it = GetDispatchFunctionForPCViaMap( indirect_pc, this_dispatch);
       }
    }
-   
+
    if( ! found_it)
    {
       if (log)
@@ -464,12 +466,12 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
       // fprintf( stderr, "*unknown dispatch*\n");
       return ret_plan_sp;
    }
-   
+
    // We are decoding a method dispatch.
    // First job is to pull the arguments out:
-   
+
    lldb::StackFrameSP thread_cur_frame = thread.GetStackFrameAtIndex(0);
-   
+
    const ABI *abi = NULL;
    ProcessSP process_sp (thread.CalculateProcess());
    if (process_sp)
@@ -481,7 +483,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
       return ret_plan_sp;
    }
    TargetSP target_sp (thread.CalculateTarget());
-   
+
    ClangASTContext *clang_ast_context = target_sp->GetScratchClangASTContext();
    ValueList argument_values;
    Value void_ptr_value;
@@ -489,21 +491,21 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
    void_ptr_value.SetValueType (Value::eValueTypeScalar);
    //void_ptr_value.SetContext (Value::eContextTypeClangType, clang_void_ptr_type);
    void_ptr_value.SetCompilerType (clang_void_ptr_type);
-   
+
    Value uint32_t_value;
-   
+
    CompilerType clang_uint32_type = clang_ast_context->GetBuiltinTypeForEncodingAndBitSize(lldb::eEncodingUint, 32);
    uint32_t_value.SetValueType (Value::eValueTypeScalar);
    //void_ptr_value.SetContext (Value::eContextTypeClangType, clang_void_ptr_type);
    uint32_t_value.SetCompilerType(clang_uint32_type);
-   
+
    // If this is a struct return dispatch, then the first argument is the
    // return struct pointer, and the object is the second, and the selector is the third.
    // Otherwise the object is the first and the selector the second.
    argument_values.PushValue(void_ptr_value);
    argument_values.PushValue(uint32_t_value);
    argument_values.PushValue(void_ptr_value);
-   
+
    if (this_dispatch.has_classid_argument)
    {
       argument_values.PushValue(uint32_t_value);
@@ -513,7 +515,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
       {
          argument_values.PushValue(void_ptr_value);
       }
-   
+
    bool success = abi->GetArgumentValues (thread, argument_values);
    if( ! success)
    {
@@ -522,35 +524,35 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
          log->Printf( "Problem getting argument values.");
       return ret_plan_sp;
    }
-   
+
    lldb::addr_t obj_addr   = argument_values.GetValueAtIndex(0)->GetScalar().ULongLong();
    lldb::addr_t sel_addr   = argument_values.GetValueAtIndex(1)->GetScalar().ULongLong();
    // lldb::addr_t param_addr = argument_values.GetValueAtIndex(2)->GetScalar().ULongLong();
    lldb::addr_t isa_addr   = LLDB_INVALID_ADDRESS;
-   
+
    if (obj_addr == 0x0)
    {
       if (log)
          log->Printf("Asked to step to dispatch to nil object, returning empty plan.");
       return ret_plan_sp;
    }
-   
+
    ExecutionContext exe_ctx (thread.shared_from_this());
    Process *process = exe_ctx.GetProcessPtr();
-   
+
    // Figure out the class this is being dispatched to and see if we've already cached this method call,
    // If so we can push a run-to-address plan directly.  Otherwise we have to figure out where
    // the implementation lives.
-   
+
    // isa_addr will store the class pointer that the method is being dispatched to - so either the class
    // directly or the super class if this is one of the objc_msgSendSuper flavors.  That's mostly used to
    // look up the class/selector pair in our cache.
-   
+
    // has cls
    if( this_dispatch.has_class_argument)
    {
       Value cls_value( *(argument_values.GetValueAtIndex(3)));
-      
+
       cls_value.SetCompilerType( clang_void_ptr_type);
       cls_value.SetValueType( Value::eValueTypeLoadAddress);
       cls_value.ResolveValue( &exe_ctx);
@@ -574,14 +576,14 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
       else
       {
          // In the direct dispatch case, the object->isa is the class pointer we want.
-         
+
          // This is a little cheesy, but since object->isa is the first field,
          // making the object value a load address value and resolving it will get
          // the pointer sized data pointed to by that value...
-         
+
          // Note, it isn't a fatal error not to be able to get the address from the object, since this might
          // be a "tagged pointer" which isn't a real object, but rather some word length encoded dingus.
-         
+
          // figure out isa from object argument
 
          if( (obj_addr & 0x7) == 0)  // quick tagged pointer check
@@ -591,7 +593,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
             isa_value.SetCompilerType(clang_void_ptr_type);
             isa_value.SetValueType(Value::eValueTypeLoadAddress);
             isa_value.ResolveValue(&exe_ctx);
-            
+
             if (isa_value.GetScalar().IsValid())
             {
                // fprintf( stderr, "get isa\n");
@@ -604,15 +606,15 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
       }
    }
    // in the case of obj, _cmd, _param, clsid: isa_addr is still unknown
-   
+
    // Okay, we've may have got the address of the class for which we're resolving this, let's see if it's in our cache:
    lldb::addr_t impl_addr = LLDB_INVALID_ADDRESS;
-   
+
    //   fprintf( stderr, "  obj  : 0x%llx\n", (unsigned long long) obj_addr);
    //   fprintf( stderr, "  _cmd : 0x%llx\n", (unsigned long long) sel_addr);
    //   fprintf( stderr, "_param : 0x%llx\n", (unsigned long long) param_addr);
    //   fprintf( stderr, "   cls : 0x%llx\n", (unsigned long long) isa_addr);
-   
+
    if (isa_addr != LLDB_INVALID_ADDRESS)
    {
       if (log)
@@ -622,37 +624,37 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
       }
       ObjCLanguageRuntime *objc_runtime = thread.GetProcess()->GetObjCLanguageRuntime ();
       assert(objc_runtime != NULL);
-      
+
       impl_addr = objc_runtime->LookupInMethodCache (isa_addr, sel_addr);
       // fprintf( stderr, "impl: 0x%llx\n", (unsigned long long)impl_addr);
    }
-   
+
    /*
     * At this point we "know" that we are going to step through, either directly
-    * or via that trampoline thingy... so since out message sender is not a 
+    * or via that trampoline thingy... so since out message sender is not a
     * true trampoline but a c-function, we need to set a breakpoint
     * (this is done better with the thunk code)
     */
    // SetBreakpointForReturn( thread, stackid);
-   
+
    if (impl_addr != LLDB_INVALID_ADDRESS)
    {
       // Yup, it was in the cache, so we can run to that address directly.
-      
+
       if (log)
          log->Printf ("Found implementation address in cache: 0x%" PRIx64, impl_addr);
-      
+
       ret_plan_sp.reset (new ThreadPlanRunToAddress (thread, impl_addr, stop_others));
       // fprintf( stderr, "cached return\n");
       return ret_plan_sp;
    }
-   
+
    // We haven't seen this class/selector pair yet.  Look it up.
    StreamString errors;
    Address impl_code_address;
-   
+
    ValueList dispatch_values;
-   
+
    // We've will inject a little function in the target that takes the object, selector and some flags,
    // and figures out the implementation.  Looks like:
    //      void *__lldb_objc_find_implementation_for_selector (void *object,
@@ -662,15 +664,15 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
    //                                                          int is_meta,
    //                                                          int debug)
    // So set up the arguments for that call.
-   
+
    dispatch_values.PushValue (*(argument_values.GetValueAtIndex(0)));
    dispatch_values.PushValue (*(argument_values.GetValueAtIndex(1)));
-   
+
    // is_classid
    if( this_dispatch.has_classid_argument)  // obj, _cmd, _param, clsid
    {
       Value  value( *(argument_values.GetValueAtIndex( 3)));
-      
+
       value.SetCompilerType( clang_void_ptr_type);
       dispatch_values.PushValue( value); // just push it (cast as void *)
    }
@@ -678,38 +680,38 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
    // obj, _cmd, _param, (cls/isa)
    {
       Value  value( isa_addr);
-      
+
       value.SetCompilerType( clang_void_ptr_type);
       dispatch_values.PushValue( value); // push isa
    }
-   
+
    Value flag_value;
    CompilerType clang_int_type = clang_ast_context->GetBuiltinTypeForEncodingAndBitSize(lldb::eEncodingSint, 32);
    flag_value.SetValueType (Value::eValueTypeScalar);
    //flag_value.SetContext (Value::eContextTypeClangType, clang_int_type);
    flag_value.SetCompilerType (clang_int_type);
-   
+
    // is_classid
    if (this_dispatch.has_classid_argument)
       flag_value.GetScalar() = 1;
    else
       flag_value.GetScalar() = 0;
    dispatch_values.PushValue (flag_value);
-   
+
    // is_meta
    if (this_dispatch.is_meta)
       flag_value.GetScalar() = 1;
    else
       flag_value.GetScalar() = 0;
    dispatch_values.PushValue (flag_value);
-   
+
    if (log && log->GetVerbose())
       flag_value.GetScalar() = 1;
    else
       flag_value.GetScalar() = 0;  // FIXME - Set to 0 when debugging is done.
    dispatch_values.PushValue (flag_value);
-   
-   
+
+
    // The step through code might have to fill in the cache, so it is not safe to run only one thread.
    // So we override the stop_others value passed in to us here:
    const bool trampoline_stop_others = false;
@@ -726,7 +728,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
       log->Printf("Using ObjC step plan: %s.\n", s.GetData());
    }
    //  fprintf( stderr, "trampoline return\n");
-   
+
    return ret_plan_sp;
 }
 
