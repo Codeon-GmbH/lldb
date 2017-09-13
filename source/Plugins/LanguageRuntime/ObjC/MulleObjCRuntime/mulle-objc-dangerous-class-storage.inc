@@ -1,0 +1,5 @@
+"void   *__lldb_objc_get_dangerous_class_storage( void)\n"
+"{\n"
+"extern void   *mulle_objc_lldb_get_dangerous_classstorage_pointer( void);\n"
+"return( mulle_objc_lldb_get_dangerous_classstorage_pointer());\n"
+"}\n"
