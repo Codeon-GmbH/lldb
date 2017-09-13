@@ -462,7 +462,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
    if( ! found_it)
    {
       if (log)
-         log->Printf( "Unknown dispatch address 0x%llx.", curr_pc);
+         log->Printf( "Unknown dispatch address 0x%llx.", (unsigned long long) curr_pc);
       // fprintf( stderr, "*unknown dispatch*\n");
       return ret_plan_sp;
    }
