@@ -68,39 +68,24 @@ MulleObjCTrampolineHandler::~MulleObjCTrampolineHandler() {}
 // I would say "front" facing function calls emitted by -O0
 // which are:
 //
-//  mulle_objc_object_call
-//  mulle_objc_object_call_classid
-//  mulle_objc_infraclass_metacall_classid
+//   mulle_objc_object_call
+//   _mulle_objc_object_supercall
+//
+// We should also step through
+//   mulle_objc_unfailingfastlookup_infraclass
+// but we can't for now.
 //
 const MulleObjCTrampolineHandler::DispatchFunction
     MulleObjCTrampolineHandler::g_dispatch_functions[] = {
         // NAME                              HAS_CLASS_ARG  HAS_CLASSID_ARG  IS_META
-       {"mulle_objc_object_call",                    false,  false, false },
-       // {"mulle_objc_object_call2",                   false,  false, false },
-       // {"mulle_objc_object_call2_empty_cache",       false,  false, false },
-       // {"mulle_objc_object_constant_methodid_call",  false,  false, false },
-       // {"mulle_objc_object_variable_methodid_call",  false,  false, false },
-
-       // hm hm
-       // {"mulle_objc_object_inline_constant_methodid_call", false,  false, false },
-       // {"mulle_objc_object_inline_variable_methodid_call", false,  false, false },
-
-       // calls to object  where class is fourth parameter
-       // { "mulle_objc_object_call_class",              true,  false, false  },
-       //       { "_mulle_objc_object_call_class_needs_cache", true,  false, false  },
-       // { "mulle_objc_object_call_needs_cache2",       true,  false, false  },
-       // { "mulle_objc_object_call_uncached_class",     true,  false, false  },
-       // { "mulle_objc_object_call_class_empty_cache",  true,  false, false  },
-
+       { "mulle_objc_object_call",            false,  false, false },
        // super calls, where we have a classid as fourth parameter
-       {"mulle_objc_object_call_classid",                 false, true, false },
-       // {"_mulle_objc_object_inline_call_classid",         false, true, false },
-       // {"_mulle_objc_object_unfailing_call_methodid",     false, true, false },
+       { "_mulle_objc_object_supercall",      false, true, false }
+       // optimized calls, where we have a class as fourth parameter
 
-       // super calls, known to metaclass
-       {"mulle_objc_infraclass_metacall_classid",         false, true, true  },
-       // {"mulle_objc_infraclass_inline_metacall_classid",  false, true, true  }
-       // {"_mulle_objc_infraclass_inline_metacall_classid", false, true, true  }
+       // maybe these second stages too ?
+       // { "_mulle_objc_object_call2",          false,  false, false },
+       // { "_mulle_objc_object_call_class",     true, false, false }
     };
 
 
@@ -202,7 +187,7 @@ MulleObjCTrampolineHandler::MulleObjCTrampolineHandler(
   }
 
   m_classlookup_addr = LookupFunctionSymbol( process_sp,
-                                             "mulle_objc_unfailing_get_or_lookup_infraclass");
+                                             "mulle_objc_unfailingfastlookup_infraclass");
 }
 
 
