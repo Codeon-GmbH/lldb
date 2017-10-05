@@ -1,4 +1,4 @@
-%.inc  :  %.c
+%.inc  :  %.src
 	./make-inc.sh $< $@
 
 

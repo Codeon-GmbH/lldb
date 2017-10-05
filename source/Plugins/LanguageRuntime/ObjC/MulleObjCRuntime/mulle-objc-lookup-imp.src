@@ -13,17 +13,17 @@ void   *__lldb_objc_find_implementation_for_selector( void *object,
                                                       int is_meta,
                                                       int debug)
 {
-   void   *mulle_objc_lldb_lookup_methodimplementation( void *obj,
-                                                        unsigned int methodid,
-                                                        void *cls_or_classid,
-                                                        int is_classid,
-                                                        int is_meta,
-                                                        int debug);
+   void   *mulle_objc_lldb_lookup_implementation( void *obj,
+                                                  unsigned int methodid,
+                                                  void *cls_or_classid,
+                                                  int is_classid,
+                                                  int is_meta,
+                                                  int debug);
 
-    return( mulle_objc_lldb_lookup_methodimplementation( object,
-                                                         methodid,
-                                                         cls_or_classid,
-                                                         is_classid,
-                                                         is_meta,
-                                                         debug));
+    return( mulle_objc_lldb_lookup_implementation( object,
+                                                   methodid,
+                                                   cls_or_classid,
+                                                   is_classid,
+                                                   is_meta,
+                                                   debug));
 }
