@@ -154,7 +154,7 @@ MulleObjCTrampolineHandler::MulleObjCTrampolineHandler(
     m_process_wp = process_sp;
   // Look up the known resolution functions:
 
-  ConstString get_impl_name( "mulle_objc_lldb_lookup_methodimplementation");
+  ConstString get_impl_name( "mulle_objc_lldb_lookup_implementation");
   ConstString msg_forward_name("__forward_mulle_objc_object_call");
 
   Target *target = process_sp ? &process_sp->GetTarget() : NULL;

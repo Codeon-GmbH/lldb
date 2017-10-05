@@ -287,11 +287,11 @@ bool MulleObjCRuntime::IsMulleObjCRuntimeModule(const ModuleSP &module_sp) {
    SymbolContextList contexts;
 
    //
-   // if mulle_objc_lldb_lookup_methodimplementation then this module
+   // if mulle_objc_lldb_lookup_implementation then this module
    // contains the mulle_objc_runtime lldb code
    //
    if( module_sp->FindSymbolsWithNameAndType(
-                                             ConstString( "mulle_objc_lldb_lookup_methodimplementation"),
+                                             ConstString( "mulle_objc_lldb_lookup_implementation"),
                                              eSymbolTypeCode, contexts))
    {
       //fprintf( stderr, "MulleObjC runtime IN DA HOUSE at \"%s\"!!\n",
