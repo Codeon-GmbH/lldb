@@ -687,6 +687,15 @@
 		3FDFED2819BA6D96009756A7 /* HostThread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FDFED2519BA6D96009756A7 /* HostThread.cpp */; };
 		3FDFED2919BA6D96009756A7 /* ThreadLauncher.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FDFED2619BA6D96009756A7 /* ThreadLauncher.cpp */; };
 		3FDFED2D19C257A0009756A7 /* HostProcess.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FDFED2C19C257A0009756A7 /* HostProcess.cpp */; };
+		4135BFFF1F8657A700E7EB1A /* CMakeLists.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4135BFEE1F8657A700E7EB1A /* CMakeLists.txt */; };
+		4135C0011F8657A700E7EB1A /* MulleObjCRuntime.cpp in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4135BFF01F8657A700E7EB1A /* MulleObjCRuntime.cpp */; };
+		4135C0021F8657A700E7EB1A /* MulleObjCRuntime.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4135BFF11F8657A700E7EB1A /* MulleObjCRuntime.h */; };
+		4135C0031F8657A700E7EB1A /* MulleObjCRuntimeV1.cpp in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4135BFF21F8657A700E7EB1A /* MulleObjCRuntimeV1.cpp */; };
+		4135C0041F8657A700E7EB1A /* MulleObjCRuntimeV1.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4135BFF31F8657A700E7EB1A /* MulleObjCRuntimeV1.h */; };
+		4135C0051F8657A700E7EB1A /* MulleObjCTrampolineHandler.cpp in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4135BFF41F8657A700E7EB1A /* MulleObjCTrampolineHandler.cpp */; };
+		4135C0061F8657A700E7EB1A /* MulleObjCTrampolineHandler.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4135BFF51F8657A700E7EB1A /* MulleObjCTrampolineHandler.h */; };
+		4135C0071F8657A700E7EB1A /* MulleThreadPlanStepThroughObjCTrampoline.cpp in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4135BFF61F8657A700E7EB1A /* MulleThreadPlanStepThroughObjCTrampoline.cpp */; };
+		4135C0081F8657A700E7EB1A /* MulleThreadPlanStepThroughObjCTrampoline.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4135BFF71F8657A700E7EB1A /* MulleThreadPlanStepThroughObjCTrampoline.h */; };
 		490A36C0180F0E6F00BA31F8 /* PlatformWindows.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 490A36BD180F0E6F00BA31F8 /* PlatformWindows.cpp */; };
 		490A966B1628C3BF00F0002E /* SBDeclaration.h in Headers */ = {isa = PBXBuildFile; fileRef = 9452573816262CEF00325455 /* SBDeclaration.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		492DB7EB1EC662E200B9E9AF /* Status.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 492DB7E81EC662D100B9E9AF /* Status.cpp */; };
@@ -1248,6 +1257,15 @@
 				9A20570F1F3B821A00F6C293 /* test-dwarf.cpp in CopyFiles */,
 				9A2057101F3B821A00F6C293 /* test-dwarf.exe in CopyFiles */,
 				AF90106515AB7D3600FF120D /* lldb.1 in CopyFiles */,
+				4135C0041F8657A700E7EB1A /* MulleObjCRuntimeV1.h in CopyFiles */,
+				4135C0051F8657A700E7EB1A /* MulleObjCTrampolineHandler.cpp in CopyFiles */,
+				4135C0021F8657A700E7EB1A /* MulleObjCRuntime.h in CopyFiles */,
+				4135C0071F8657A700E7EB1A /* MulleThreadPlanStepThroughObjCTrampoline.cpp in CopyFiles */,
+				4135C0011F8657A700E7EB1A /* MulleObjCRuntime.cpp in CopyFiles */,
+				4135C0081F8657A700E7EB1A /* MulleThreadPlanStepThroughObjCTrampoline.h in CopyFiles */,
+				4135C0031F8657A700E7EB1A /* MulleObjCRuntimeV1.cpp in CopyFiles */,
+				4135C0061F8657A700E7EB1A /* MulleObjCTrampolineHandler.h in CopyFiles */,
+				4135BFFF1F8657A700E7EB1A /* CMakeLists.txt in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
@@ -2448,6 +2466,23 @@
 		3FDFED2519BA6D96009756A7 /* HostThread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HostThread.cpp; sourceTree = "<group>"; };
 		3FDFED2619BA6D96009756A7 /* ThreadLauncher.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ThreadLauncher.cpp; sourceTree = "<group>"; };
 		3FDFED2C19C257A0009756A7 /* HostProcess.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HostProcess.cpp; sourceTree = "<group>"; };
+		4135BFEE1F8657A700E7EB1A /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		4135BFEF1F8657A700E7EB1A /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		4135BFF01F8657A700E7EB1A /* MulleObjCRuntime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MulleObjCRuntime.cpp; sourceTree = "<group>"; };
+		4135BFF11F8657A700E7EB1A /* MulleObjCRuntime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MulleObjCRuntime.h; sourceTree = "<group>"; };
+		4135BFF21F8657A700E7EB1A /* MulleObjCRuntimeV1.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MulleObjCRuntimeV1.cpp; sourceTree = "<group>"; };
+		4135BFF31F8657A700E7EB1A /* MulleObjCRuntimeV1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MulleObjCRuntimeV1.h; sourceTree = "<group>"; };
+		4135BFF41F8657A700E7EB1A /* MulleObjCTrampolineHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MulleObjCTrampolineHandler.cpp; sourceTree = "<group>"; };
+		4135BFF51F8657A700E7EB1A /* MulleObjCTrampolineHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MulleObjCTrampolineHandler.h; sourceTree = "<group>"; };
+		4135BFF61F8657A700E7EB1A /* MulleThreadPlanStepThroughObjCTrampoline.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MulleThreadPlanStepThroughObjCTrampoline.cpp; sourceTree = "<group>"; };
+		4135BFF71F8657A700E7EB1A /* MulleThreadPlanStepThroughObjCTrampoline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MulleThreadPlanStepThroughObjCTrampoline.h; sourceTree = "<group>"; };
+		4135BFF81F8657A700E7EB1A /* make-inc.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "make-inc.sh"; sourceTree = "<group>"; };
+		4135BFF91F8657A700E7EB1A /* mulle-objc-dangerous-class-storage.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = "mulle-objc-dangerous-class-storage.inc"; sourceTree = "<group>"; };
+		4135BFFA1F8657A700E7EB1A /* mulle-objc-dangerous-class-storage.src */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "mulle-objc-dangerous-class-storage.src"; sourceTree = "<group>"; };
+		4135BFFB1F8657A700E7EB1A /* mulle-objc-lookup-imp.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = "mulle-objc-lookup-imp.inc"; sourceTree = "<group>"; };
+		4135BFFC1F8657A700E7EB1A /* mulle-objc-lookup-imp.src */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "mulle-objc-lookup-imp.src"; sourceTree = "<group>"; };
+		4135BFFD1F8657A700E7EB1A /* mulle-objc-object-checker.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = "mulle-objc-object-checker.inc"; sourceTree = "<group>"; };
+		4135BFFE1F8657A700E7EB1A /* mulle-objc-object-checker.src */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "mulle-objc-object-checker.src"; sourceTree = "<group>"; };
 		4906FD4012F2255300A2A77C /* ASTDumper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ASTDumper.cpp; path = ExpressionParser/Clang/ASTDumper.cpp; sourceTree = "<group>"; };
 		4906FD4412F2257600A2A77C /* ASTDumper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ASTDumper.h; path = ExpressionParser/Clang/ASTDumper.h; sourceTree = "<group>"; };
 		490A36BD180F0E6F00BA31F8 /* PlatformWindows.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlatformWindows.cpp; sourceTree = "<group>"; };
@@ -5890,6 +5925,30 @@
 			name = windows;
 			sourceTree = "<group>";
 		};
+		4135BFED1F8657A700E7EB1A /* MulleObjCRuntime */ = {
+			isa = PBXGroup;
+			children = (
+				4135BFEE1F8657A700E7EB1A /* CMakeLists.txt */,
+				4135BFEF1F8657A700E7EB1A /* Makefile */,
+				4135BFF01F8657A700E7EB1A /* MulleObjCRuntime.cpp */,
+				4135BFF11F8657A700E7EB1A /* MulleObjCRuntime.h */,
+				4135BFF21F8657A700E7EB1A /* MulleObjCRuntimeV1.cpp */,
+				4135BFF31F8657A700E7EB1A /* MulleObjCRuntimeV1.h */,
+				4135BFF41F8657A700E7EB1A /* MulleObjCTrampolineHandler.cpp */,
+				4135BFF51F8657A700E7EB1A /* MulleObjCTrampolineHandler.h */,
+				4135BFF61F8657A700E7EB1A /* MulleThreadPlanStepThroughObjCTrampoline.cpp */,
+				4135BFF71F8657A700E7EB1A /* MulleThreadPlanStepThroughObjCTrampoline.h */,
+				4135BFF81F8657A700E7EB1A /* make-inc.sh */,
+				4135BFF91F8657A700E7EB1A /* mulle-objc-dangerous-class-storage.inc */,
+				4135BFFA1F8657A700E7EB1A /* mulle-objc-dangerous-class-storage.src */,
+				4135BFFB1F8657A700E7EB1A /* mulle-objc-lookup-imp.inc */,
+				4135BFFC1F8657A700E7EB1A /* mulle-objc-lookup-imp.src */,
+				4135BFFD1F8657A700E7EB1A /* mulle-objc-object-checker.inc */,
+				4135BFFE1F8657A700E7EB1A /* mulle-objc-object-checker.src */,
+			);
+			path = MulleObjCRuntime;
+			sourceTree = "<group>";
+		};
 		490A36BA180F0E6F00BA31F8 /* Windows */ = {
 			isa = PBXGroup;
 			children = (
@@ -6001,6 +6060,7 @@
 		4CCA644013B40B82003BDF98 /* ObjC */ = {
 			isa = PBXGroup;
 			children = (
+				4135BFED1F8657A700E7EB1A /* MulleObjCRuntime */,
 				4CCA644113B40B82003BDF98 /* AppleObjCRuntime */,
 			);
 			path = ObjC;

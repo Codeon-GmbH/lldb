@@ -401,9 +401,14 @@ static void ParseLangArgs(LangOptions &Opts, InputKind IK, const char *triple) {
       break;
     case InputKind::Asm:
     case InputKind::C:
-    case InputKind::ObjC:
       LangStd = LangStandard::lang_gnu99;
       break;
+// @mulle-objc@ >
+    case InputKind::ObjC:
+    case InputKind::ObjCAAM:
+      LangStd = LangStandard::lang_c11;
+      break;
+// @mulle-objc@ <
     case InputKind::CXX:
     case InputKind::ObjCXX:
       LangStd = LangStandard::lang_gnucxx98;
@@ -4947,6 +4952,9 @@ lldb::Encoding ClangASTContext::GetEncoding(lldb::opaque_compiler_type_t type,
     case clang::BuiltinType::ObjCClass:
     case clang::BuiltinType::ObjCId:
     case clang::BuiltinType::ObjCSel:
+// @mulle-objc@ >
+    case clang::BuiltinType::ObjCProtocol:
+// @mulle-objc@ <
       return lldb::eEncodingUint;
 
     case clang::BuiltinType::NullPtr:

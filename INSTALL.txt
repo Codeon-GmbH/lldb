@@ -16,3 +16,20 @@ For instructions to build LLDB on Linux, or more details about supported
 compiler versions, other dependencies, and build flags, see:
 
     http://lldb.llvm.org/build.html
+
+
+## Build fix for Xcode with mulle_lldb_40
+
+The script will try to download and bail on `release_40` not being there
+
+Fix it like so:
+
+```
+cd llvm
+git fetch origin refs/heads/release_40
+git checkout -b release_40 f3d3277bb713bb8aced9a7ac2e9b05c52d2844ee
+
+cd tools/clang
+git fetch origin refs/heads/release_40
+git checkout -b release_40 21fe7e8f8ab44b67238af7bf9ba9d8afdf0c0e2c
+```
