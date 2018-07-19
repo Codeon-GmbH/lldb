@@ -1262,6 +1262,7 @@ TypeSP DWARFASTParserClang::ParseTypeFromDWARF(const SymbolContext &sc,
           is_static = true;
         }
 
+        fprintf( stderr, "die.HasChildren() = %s\n", die.HasChildren() ? "YES" : "NO");
         if (die.HasChildren()) {
           bool skip_artificial = true;
           ParseChildParameters(sc, containing_decl_ctx, die, skip_artificial,
@@ -3313,6 +3314,75 @@ bool DWARFASTParserClang::ParseChildMembers(
   return true;
 }
 
+/// @mulle-lldb@ make _param function arguments again >
+/*
+ <2><64>: Abbrev Number: 4 (DW_TAG_formal_parameter)
+    <65>   DW_AT_location    : 2 byte block: 91 68      (DW_OP_fbreg: -24)
+    <68>   DW_AT_name        : (indirect string, offset: 0x9c): _param
+    <6c>   DW_AT_type        : <0x84> ***reference to DW_TAG_pointer_type***
+    <70>   DW_AT_artificial  : 1
+ <1><84>: Abbrev Number: 5 (DW_TAG_pointer_type)
+    <85>   DW_AT_type        : <0x89>
+ <1><89>: Abbrev Number: 8 (DW_TAG_structure_type)
+    <8a>   DW_AT_name        : (indirect string, offset: 0xb6): p.a:b:
+    <8e>   DW_AT_byte_size   : 16
+    <8f>   DW_AT_decl_file   : 1
+    <90>   DW_AT_decl_line   : 9
+ <2><91>: Abbrev Number: 9 (DW_TAG_member)
+    <92>   DW_AT_name        : (indirect string, offset: 0xa3): a
+    <96>   DW_AT_type        : <0xaa>
+    <9a>   DW_AT_decl_file   : 1
+    <9b>   DW_AT_decl_line   : 9
+    <9c>   DW_AT_data_member_location: 0
+*/
+
+bool DWARFASTParserClang::ParseMulleABIParameters( const DWARFDIE &die,
+  const CompilerType &compiler_type,
+  std::vector<lldb_private::CompilerType> &function_param_types,
+  std::vector<clang::ParmVarDecl *> &function_param_decls,
+  clang::StorageClass storage) 
+{
+  if( ! compiler_type.IsPointerType())
+    return( false);
+
+  CompilerType  paramType;
+
+  paramType = compiler_type.GetPointeeType();
+  if( ! paramType.IsAggregateType()) 
+    return( false);
+
+  uint32_t      i, n;
+  CompilerType  fieldType;
+  std::string   name;
+  uint64_t      bit_offset_ptr;
+  uint32_t      bitfield_bit_size_ptr;
+  bool          is_bitfield_ptr;
+
+  n = paramType.GetNumFields();
+  for( i = 0; i < n; i++)
+  {
+    fieldType = paramType.GetFieldAtIndex( i,
+                                           name,
+                                           &bit_offset_ptr,
+                                           &bitfield_bit_size_ptr,
+                                           &is_bitfield_ptr);
+                                           
+    fprintf( stderr, "#%d _param.%s found\n", (int) i, name.c_str());
+
+    function_param_types.push_back( fieldType);
+
+    clang::ParmVarDecl *param_var_decl =
+        m_ast.CreateParameterDeclaration(
+            name.c_str(), fieldType, storage);
+    assert(param_var_decl);
+    function_param_decls.push_back(param_var_decl);
+
+    m_ast.SetMetadataAsUserID(param_var_decl, die.GetID());    
+  }
+  return( true);
+}
+/// @mulle-lldb@ make _param function arguments again <
+
 size_t DWARFASTParserClang::ParseChildParameters(
     const SymbolContext &sc, clang::DeclContext *containing_decl_ctx,
     const DWARFDIE &parent_die, bool skip_artificial, bool &is_static,
@@ -3459,6 +3529,30 @@ size_t DWARFASTParserClang::ParseChildParameters(
             m_ast.SetMetadataAsUserID(param_var_decl, die.GetID());
           }
         }
+        
+        /// @mulle-lldb@ make _param function arguments again >
+        if( skip && arg_idx == 2 && name && ! strcmp( name, "_param"))
+        {
+          CompileUnit *comp_unit = die.GetLLDBCompileUnit();
+          if (comp_unit) {
+            switch (comp_unit->GetLanguage()) {
+            default:
+              break;            
+            case eLanguageTypeObjC:
+            case eLanguageTypeObjC_plus_plus:
+              Type *type = die.ResolveTypeUID(DIERef(param_type_die_form));
+              if (type) {
+                  ParseMulleABIParameters( die, 
+                                           type->GetForwardCompilerType(), 
+                                           function_param_types, 
+                                           function_param_decls,
+                                           storage);
+              }
+              break;
+            }
+          }
+        }
+        /// @mulle-lldb@ make _param function arguments again <
       }
       arg_idx++;
     } break;
