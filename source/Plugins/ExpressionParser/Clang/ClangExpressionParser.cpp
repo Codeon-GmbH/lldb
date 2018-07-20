@@ -447,8 +447,10 @@ ClangExpressionParser::ClangExpressionParser(ExecutionContextScope *exe_scope,
         m_compiler->getLangOpts().ObjCRuntime.set(ObjCRuntime::MacOSX,
                                                   VersionTuple(10, 7));
       else
-        m_compiler->getLangOpts().ObjCRuntime.set(ObjCRuntime::FragileMacOSX,
-                                                  VersionTuple(10, 7));
+/// @mulle-objc@ change to Mulle runtime >
+        m_compiler->getLangOpts().ObjCRuntime.set(ObjCRuntime::Mulle,
+                                                  VersionTuple(0, 12));
+/// @mulle-objc@ change to Mulle runtime <
 
       if (process_sp->GetObjCLanguageRuntime()->HasNewLiteralsAndIndexing())
         m_compiler->getLangOpts().DebuggerObjCLiteral = true;

@@ -376,26 +376,6 @@ bool MulleObjCRuntime::IsSymbolARuntimeThunk(const Symbol &symbol) {
 }
 
 
-// this is not used...
-bool MulleObjCRuntime::IsMulleObjCCodeModule(const ModuleSP &module_sp) {
-  if (! module_sp)
-     return false;
-
-  SymbolContextList contexts;
-
-  // if __load_mulle_objc is defined it's a bona fide
-  // MulleObjC code containing module IMO
-  if( module_sp->FindSymbolsWithNameAndType(
-                           ConstString( "__load_mulle_objc"),
-                           eSymbolTypeCode, contexts))
-  {
-//    fprintf( stderr, "MulleObjC code at \"%s\"!!\n",
-//            module_sp->GetFileSpec().GetFilename().AsCString());
-    return true;
-  }
-  return false;
-}
-
 void MulleObjCRuntime::GetValuesForGlobalCFBooleans(lldb::addr_t &cf_true,
                                                     lldb::addr_t &cf_false) {
   cf_true = cf_false = LLDB_INVALID_ADDRESS;

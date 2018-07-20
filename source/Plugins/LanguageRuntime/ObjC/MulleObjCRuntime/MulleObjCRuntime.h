@@ -78,7 +78,7 @@ public:
   lldb::ModuleSP GetMulleObjCRuntimeModule();
 
   bool IsSymbolARuntimeThunk(const Symbol &symbol) override;
-  
+
   // Sync up with the target
 
   void ModulesDidLoad(const ModuleList &module_list) override;
@@ -104,9 +104,8 @@ protected:
 
   bool CalculateHasNewLiteralsAndIndexing() override;
 
-  static bool IsMulleObjCCodeModule(const lldb::ModuleSP &module_sp);
   static bool IsMulleObjCRuntimeModule(const lldb::ModuleSP &module_sp);
-   
+
   static ObjCRuntimeVersions GetObjCVersion(Process *process,
                                             lldb::ModuleSP &objc_module_sp);
 
