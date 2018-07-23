@@ -407,7 +407,7 @@ llvm::StringRef PythonString::GetString() const {
   char *c;
 
 #if PY_MAJOR_VERSION >= 3
-  c = PyUnicode_AsUTF8AndSize(m_py_obj, &size);
+  c = (char *) PyUnicode_AsUTF8AndSize(m_py_obj, &size);
 #else
   PyString_AsStringAndSize(m_py_obj, &c, &size);
 #endif
