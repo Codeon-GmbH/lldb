@@ -405,14 +405,14 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
    DispatchFunction this_dispatch;
    bool found_it;
 
-   Log *log(lldb_private::GetLogIfAllCategoriesSet (MULLE_LOG));
+   Log *log(lldb_private::GetLogIfAllCategoriesSet( MULLE_LOG));
 
    if( CanStepOver())
    {
       if( curr_pc == m_classlookup_addr)
       {
          if (log)
-            log->Printf( "Step out of class lookup.");
+            log->Printf( "Mulle: Return with \"step out of class-lookup\" plan.");
 
          ret_plan_sp.reset( new ThreadPlanStepOut(
                   thread,
@@ -447,7 +447,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
    if( ! found_it)
    {
       if (log)
-         log->Printf( "Unknown dispatch address 0x%llx.", (unsigned long long) curr_pc);
+         log->Printf( "Mulle: Unknown dispatch address 0x%llx. Returning empty plan.", (unsigned long long) curr_pc);
       // fprintf( stderr, "*unknown dispatch*\n");
       return ret_plan_sp;
    }
@@ -464,7 +464,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
    if (abi == NULL)
    {
       if (log)
-         log->Printf( "Unknown ABI.");
+         log->Printf( "Mulle: Unknown ABI. Returning empty plan.");
       return ret_plan_sp;
    }
    TargetSP target_sp (thread.CalculateTarget());
@@ -506,7 +506,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
    {
       // fprintf( stderr, "fail getting argument values\n");
       if (log)
-         log->Printf( "Problem getting argument values.");
+         log->Printf( "Mulle: Problem getting argument values. Returning empty plan.");
       return ret_plan_sp;
    }
 
@@ -515,10 +515,10 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
    // lldb::addr_t param_addr = argument_values.GetValueAtIndex(2)->GetScalar().ULongLong();
    lldb::addr_t isa_addr   = LLDB_INVALID_ADDRESS;
 
-   if (obj_addr == 0x0)
+   if( obj_addr == 0x0)
    {
       if (log)
-         log->Printf("Asked to step to dispatch to nil object, returning empty plan.");
+         log->Printf("Mulle: Asked to step to dispatch to nil object. Returning empty plan.");
       return ret_plan_sp;
    }
 
@@ -548,8 +548,11 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
          isa_addr = cls_value.GetScalar().ULongLong();
       }
       else
+      {
          if (log)
-            log->Printf("Supplied class is invalid.");
+            log->Printf("Mulle: Supplied class is invalid. Returning empty plan.");
+         return ret_plan_sp;
+      }
    }
    else
    {
@@ -586,7 +589,10 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
             }
             else
                if (log)
-                  log->Printf("Failed to extract the isa value from object.");
+               {
+                  log->Printf("Mulle: Supplied class is invalid. Returning empty plan.");
+                  return ret_plan_sp;
+               }
          }
       }
    }
@@ -595,19 +601,22 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
    // Okay, we've may have got the address of the class for which we're resolving this, let's see if it's in our cache:
    lldb::addr_t impl_addr = LLDB_INVALID_ADDRESS;
 
-   //   fprintf( stderr, "  obj  : 0x%llx\n", (unsigned long long) obj_addr);
-   //   fprintf( stderr, "  _cmd : 0x%llx\n", (unsigned long long) sel_addr);
-   //   fprintf( stderr, "_param : 0x%llx\n", (unsigned long long) param_addr);
-   //   fprintf( stderr, "   cls : 0x%llx\n", (unsigned long long) isa_addr);
+   if( log)
+   {
+      log->Printf("Mulle:   obj  : 0x%llx\n", (unsigned long long) obj_addr);
+      log->Printf("Mulle:   _cmd : 0x%llx\n", (unsigned long long) sel_addr);
+      // log->Printf("Mulle: _param : 0x%llx\n", (unsigned long long) param_addr);
+      log->Printf("Mulle:    cls : 0x%llx\n", (unsigned long long) isa_addr);
+   }
 
    if (isa_addr != LLDB_INVALID_ADDRESS)
    {
       if (log)
       {
-         log->Printf("Resolving call for class - 0x%" PRIx64 " and selector - 0x%" PRIx64,
+         log->Printf("Mulle: Resolving call for class - 0x%" PRIx64 " and selector - 0x%" PRIx64,
                      isa_addr, sel_addr);
       }
-      ObjCLanguageRuntime *objc_runtime = thread.GetProcess()->GetObjCLanguageRuntime ();
+      ObjCLanguageRuntime *objc_runtime = thread.GetProcess()->GetObjCLanguageRuntime();
       assert(objc_runtime != NULL);
 
       impl_addr = objc_runtime->LookupInMethodCache (isa_addr, sel_addr);
@@ -627,7 +636,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
       // Yup, it was in the cache, so we can run to that address directly.
 
       if (log)
-         log->Printf ("Found implementation address in cache: 0x%" PRIx64, impl_addr);
+         log->Printf ("Mulle: Found implementation address in cache: 0x%. Return run to address plan." PRIx64, impl_addr);
 
       ret_plan_sp.reset (new ThreadPlanRunToAddress (thread, impl_addr, stop_others));
       // fprintf( stderr, "cached return\n");
@@ -693,7 +702,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
    if (log && log->GetVerbose())
       flag_value.GetScalar() = 1;
    else
-      flag_value.GetScalar() = 0;  // FIXME - Set to 0 when debugging is done.
+      flag_value.GetScalar() = 1;  // FIXME - Set to 0 when debugging is done.
    dispatch_values.PushValue (flag_value);
 
 
@@ -710,7 +719,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
    {
       StreamString s;
       ret_plan_sp->GetDescription(&s, eDescriptionLevelFull);
-      log->Printf("Using ObjC step plan: %s.\n", s.GetData());
+      log->Printf( "Mulle: Using ObjC step through plan: %s.\n", s.GetData());
    }
    //  fprintf( stderr, "trampoline return\n");
 

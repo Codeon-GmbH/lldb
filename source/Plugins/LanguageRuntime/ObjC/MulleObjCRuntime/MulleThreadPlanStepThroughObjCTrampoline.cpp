@@ -70,7 +70,7 @@ bool MulleThreadPlanStepThroughObjCTrampoline::InitializeFunctionCaller() {
 
     if (m_args_addr == LLDB_INVALID_ADDRESS) {
        if (log)
-          log->Printf("SetupDispatchFunction failed.");
+          log->Printf("Mulle: SetupDispatchFunction failed.");
       return false;
     }
     m_impl_function =
@@ -106,9 +106,9 @@ bool MulleThreadPlanStepThroughObjCTrampoline::
 void MulleThreadPlanStepThroughObjCTrampoline::GetDescription(
     Stream *s, lldb::DescriptionLevel level) {
   if (level == lldb::eDescriptionLevelBrief)
-    s->Printf("Step through ObjC trampoline");
+    s->Printf("Mulle: Step through ObjC trampoline");
   else {
-    s->Printf("Stepping to implementation of ObjC method - obj: 0x%llx, isa: "
+    s->Printf("Mulle: Stepping to implementation of ObjC method - obj: 0x%llx, isa: "
               "0x%" PRIx64 ", sel: 0x%" PRIx64,
               m_input_values.GetValueAtIndex(0)->GetScalar().ULongLong(),
               m_isa_addr, m_sel_addr);
@@ -138,7 +138,7 @@ bool MulleThreadPlanStepThroughObjCTrampoline::ShouldStop(Event *event_ptr) {
   Log *log(lldb_private::GetLogIfAllCategoriesSet(MULLE_LOG));
 
    if (log)
-      log->Printf("Mulle: should stop is called");
+      log->Printf("Mulle: should stop is called (asked)");
 
   if (m_func_sp) {
     if (!m_func_sp->IsPlanComplete()) {
@@ -171,14 +171,14 @@ bool MulleThreadPlanStepThroughObjCTrampoline::ShouldStop(Event *event_ptr) {
     target_so_addr.SetOpcodeLoadAddress(target_addr, exc_ctx.GetTargetPtr());
     if (target_addr == 0) {
       if (log)
-        log->Printf("Got target implementation of 0x0, stopping.");
-      SetPlanComplete();
+        log->Printf("Mulle: Got target implementation of 0x0, stopping.");
+      SetPlanComplete( false);
       return true;
     }
     if (m_trampoline_handler->AddrIsMsgForward(target_addr)) {
       if (log)
         log->Printf(
-            "Implementation lookup returned msgForward function: 0x%" PRIx64
+            "Mulle: Implementation lookup returned msgForward function: 0x%" PRIx64
             ", stopping.",
             target_addr);
 
@@ -195,7 +195,7 @@ bool MulleThreadPlanStepThroughObjCTrampoline::ShouldStop(Event *event_ptr) {
     }
 
     if (log)
-      log->Printf("Running to ObjC method implementation: 0x%" PRIx64,
+      log->Printf("Mulle: Running to ObjC method implementation: 0x%" PRIx64,
                   target_addr);
 
     ObjCLanguageRuntime *objc_runtime =
@@ -203,7 +203,7 @@ bool MulleThreadPlanStepThroughObjCTrampoline::ShouldStop(Event *event_ptr) {
     assert(objc_runtime != NULL);
     objc_runtime->AddToMethodCache(m_isa_addr, m_sel_addr, target_addr);
     if (log)
-      log->Printf("Adding {isa-addr=0x%" PRIx64 ", sel-addr=0x%" PRIx64
+      log->Printf("Mulle: Adding {isa-addr=0x%" PRIx64 ", sel-addr=0x%" PRIx64
                   "} = addr=0x%" PRIx64 " to cache.",
                   m_isa_addr, m_sel_addr, target_addr);
 
@@ -218,7 +218,7 @@ bool MulleThreadPlanStepThroughObjCTrampoline::ShouldStop(Event *event_ptr) {
     // Third stage, work the run to target plan.
      if (log)
         log->Printf("Mulle: thread plan is done");
-    SetPlanComplete();
+    SetPlanComplete( true);
     return true;
   }
 

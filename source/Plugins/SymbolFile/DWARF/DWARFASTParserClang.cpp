@@ -796,7 +796,7 @@ TypeSP DWARFASTParserClang::ParseTypeFromDWARF(const SymbolContext &sc,
                 }
                 return TypeSP();
               }
-                
+
               clang::ClassTemplateSpecializationDecl
                   *class_specialization_decl =
                       m_ast.CreateClassTemplateSpecializationDecl(
@@ -1262,7 +1262,6 @@ TypeSP DWARFASTParserClang::ParseTypeFromDWARF(const SymbolContext &sc,
           is_static = true;
         }
 
-        fprintf( stderr, "die.HasChildren() = %s\n", die.HasChildren() ? "YES" : "NO");
         if (die.HasChildren()) {
           bool skip_artificial = true;
           ParseChildParameters(sc, containing_decl_ctx, die, skip_artificial,
@@ -1624,7 +1623,7 @@ TypeSP DWARFASTParserClang::ParseTypeFromDWARF(const SymbolContext &sc,
                 m_ast.CreateFunctionTemplateSpecializationInfo(
                     function_decl, func_template_decl, template_param_infos);
               }
-              
+
               lldbassert(function_decl);
 
               if (function_decl) {
@@ -3344,7 +3343,7 @@ bool DWARFASTParserClang::ParseMulleABIParameters( const DWARFDIE &die,
   const CompilerType &compiler_type,
   std::vector<lldb_private::CompilerType> &function_param_types,
   std::vector<clang::ParmVarDecl *> &function_param_decls,
-  clang::StorageClass storage) 
+  clang::StorageClass storage)
 {
   if( ! compiler_type.IsPointerType())
     return( false);
@@ -3352,7 +3351,7 @@ bool DWARFASTParserClang::ParseMulleABIParameters( const DWARFDIE &die,
   CompilerType  paramType;
 
   paramType = compiler_type.GetPointeeType();
-  if( ! paramType.IsAggregateType()) 
+  if( ! paramType.IsAggregateType())
     return( false);
 
   uint32_t      i, n;
@@ -3370,7 +3369,7 @@ bool DWARFASTParserClang::ParseMulleABIParameters( const DWARFDIE &die,
                                            &bit_offset_ptr,
                                            &bitfield_bit_size_ptr,
                                            &is_bitfield_ptr);
-                                           
+
     fprintf( stderr, "#%d _param.%s found\n", (int) i, name.c_str());
 
     function_param_types.push_back( fieldType);
@@ -3381,7 +3380,7 @@ bool DWARFASTParserClang::ParseMulleABIParameters( const DWARFDIE &die,
     assert(param_var_decl);
     function_param_decls.push_back(param_var_decl);
 
-    m_ast.SetMetadataAsUserID(param_var_decl, die.GetID());    
+    m_ast.SetMetadataAsUserID(param_var_decl, die.GetID());
   }
   return( true);
 }
@@ -3533,7 +3532,7 @@ size_t DWARFASTParserClang::ParseChildParameters(
             m_ast.SetMetadataAsUserID(param_var_decl, die.GetID());
           }
         }
-        
+
         /// @mulle-lldb@ make _param function arguments again >
         if( skip && arg_idx == 2 && name && ! strcmp( name, "_param"))
         {
@@ -3541,14 +3540,14 @@ size_t DWARFASTParserClang::ParseChildParameters(
           if (comp_unit) {
             switch (comp_unit->GetLanguage()) {
             default:
-              break;            
+              break;
             case eLanguageTypeObjC:
             case eLanguageTypeObjC_plus_plus:
               Type *type = die.ResolveTypeUID(DIERef(param_type_die_form));
               if (type) {
-                  ParseMulleABIParameters( die, 
-                                           type->GetForwardCompilerType(), 
-                                           function_param_types, 
+                  ParseMulleABIParameters( die,
+                                           type->GetForwardCompilerType(),
+                                           function_param_types,
                                            function_param_decls,
                                            storage);
               }
