@@ -1326,7 +1326,11 @@ TypeSP DWARFASTParserClang::ParseTypeFromDWARF(const SymbolContext &sc,
 
                 clang::ObjCMethodDecl *objc_method_decl =
                     m_ast.AddMethodToObjCObjectType(
-                        class_opaque_type, type_name_cstr, clang_type,
+                        class_opaque_type, type_name_cstr,
+/// @mulle-objc@ add this for parameter names >
+                        function_param_decls,
+/// @mulle-objc@ add this for parameter names <
+                        clang_type,
                         accessibility, is_artificial, is_variadic);
                 type_handled = objc_method_decl != NULL;
                 if (type_handled) {

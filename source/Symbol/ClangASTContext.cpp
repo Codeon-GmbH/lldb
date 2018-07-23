@@ -8353,7 +8353,11 @@ clang::ObjCMethodDecl *ClangASTContext::AddMethodToObjCObjectType(
     const char *name, // the full symbol name as seen in the symbol table
                       // (lldb::opaque_compiler_type_t type, "-[NString
                       // stringWithCString:]")
-    const CompilerType &method_clang_type, lldb::AccessType access,
+/// @mulle-objc@ add this for parameter names >
+    std::vector<clang::ParmVarDecl *> &function_param_decls,
+/// @mulle-objc@ add this for parameter names <
+    const CompilerType &method_clang_type,
+    lldb::AccessType access,
     bool is_artificial, bool is_variadic) {
   if (!type || !method_clang_type.IsValid())
     return nullptr;
@@ -8441,12 +8445,23 @@ clang::ObjCMethodDecl *ClangASTContext::AddMethodToObjCObjectType(
 
   if (num_args > 0) {
     llvm::SmallVector<clang::ParmVarDecl *, 12> params;
+/// @mulle-objc@ add this for parameter names >
+    IdentifierInfo   *identifier;
+/// @mulle-objc@ add this for parameter names <
 
     for (unsigned param_index = 0; param_index < num_args; ++param_index) {
+/// @mulle-objc@ add this for parameter names >
+      identifier = nullptr;
+      if( function_param_decls.size() < param_index)
+        identifier = function_param_decls[ param_index]->getIdentifier();
+/// @mulle-objc@ add this for parameter names <
+
       params.push_back(clang::ParmVarDecl::Create(
           *ast, objc_method_decl, clang::SourceLocation(),
           clang::SourceLocation(),
-          nullptr, // anonymous
+/// @mulle-objc@ add this for parameter names >
+          identifier,
+/// @mulle-objc@ add this for parameter names <
           method_function_prototype->getParamType(param_index), nullptr,
           clang::SC_Auto, nullptr));
     }
