@@ -1,3 +1,15 @@
+static const 
+struct mulle_clang_objccompilerinfo
+{
+  unsigned int   load_version;
+  unsigned int   runtime_version;
+} __mulle_objc_objccompilerinfo =
+{
+  12, // load version must match 
+  0   // 0 to not emit __load_mulle_objc
+};
+
+
 void   *__lldb_objc_get_dangerous_class_storage( void)
 {
    extern void   *mulle_objc_lldb_get_dangerous_classstorage_pointer( void);

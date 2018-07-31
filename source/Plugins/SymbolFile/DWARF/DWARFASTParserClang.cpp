@@ -3369,9 +3369,6 @@ bool DWARFASTParserClang::ParseMulleABIParameters( const DWARFDIE &die,
                                            &bit_offset_ptr,
                                            &bitfield_bit_size_ptr,
                                            &is_bitfield_ptr);
-
-    fprintf( stderr, "#%d _param.%s found\n", (int) i, name.c_str());
-
     function_param_types.push_back( fieldType);
 
     clang::ParmVarDecl *param_var_decl =
@@ -3395,6 +3392,8 @@ size_t DWARFASTParserClang::ParseChildParameters(
     unsigned &type_quals) {
   if (!parent_die)
     return 0;
+
+  bool skipRemainingParameters = false;
 
   size_t arg_idx = 0;
   for (DWARFDIE die = parent_die.GetFirstChild(); die.IsValid();
@@ -3469,7 +3468,8 @@ size_t DWARFASTParserClang::ParseChildParameters(
           }
         }
 
-        bool skip = false;
+        bool skip = skipRemainingParameters;
+
         if (skip_artificial) {
           if (is_artificial) {
             // In order to determine if a C++ member function is
@@ -3550,6 +3550,7 @@ size_t DWARFASTParserClang::ParseChildParameters(
                                            function_param_types,
                                            function_param_decls,
                                            storage);
+                  skipRemainingParameters = true;
               }
               break;
             }

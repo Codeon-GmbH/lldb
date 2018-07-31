@@ -956,7 +956,7 @@ clang::Decl *ClangASTImporter::Minion::Imported(clang::Decl *from,
       from_named_decl->printName(name_stream);
       name_stream.flush();
 
-      log->Printf("    [ClangASTImporter] Imported (%sDecl*)%p, named %s (from "
+      log->Printf("    [ClangASTImporter] Imported (%sDecl*)%p, named \"%s\" (from "
                   "(Decl*)%p), metadata 0x%" PRIx64,
                   from->getDeclKindName(), static_cast<void *>(to),
                   name_string.c_str(), static_cast<void *>(from), user_id);

@@ -1,3 +1,14 @@
+static const 
+struct mulle_clang_objccompilerinfo
+{
+  unsigned int   load_version;
+  unsigned int   runtime_version;
+} __mulle_objc_objccompilerinfo =
+{
+  12, // load version must match 
+  0   // 0 to not emit __load_mulle_objc
+};
+
 //
 // this file is transformed with make-inc.sh into mulle-objc-lookup.inc
 // which is then included into MulleObjCTrampolineHandler.cpp
@@ -13,12 +24,12 @@ void   *__lldb_objc_find_implementation_for_selector( void *object,
                                                       int is_meta,
                                                       int debug)
 {
-   void   *mulle_objc_lldb_lookup_implementation( void *obj,
-                                                  unsigned int methodid,
-                                                  void *cls_or_classid,
-                                                  int is_classid,
-                                                  int is_meta,
-                                                  int debug);
+   extern void   *mulle_objc_lldb_lookup_implementation( void *obj,
+                                                         unsigned int methodid,
+                                                         void *cls_or_classid,
+                                                         int is_classid,
+                                                         int is_meta,
+                                                         int debug);
 
     return( mulle_objc_lldb_lookup_implementation( object,
                                                    methodid,

@@ -448,8 +448,14 @@ ClangExpressionParser::ClangExpressionParser(ExecutionContextScope *exe_scope,
                                                   VersionTuple(10, 7));
       else
 /// @mulle-objc@ change to Mulle runtime >
+      {
         m_compiler->getLangOpts().ObjCRuntime.set(ObjCRuntime::Mulle,
                                                   VersionTuple(0, 12));
+        // tagged pointers are not good for JIT, but I don't know exactly why yet
+        m_compiler->getLangOpts().ObjCDisableTaggedPointers = true;
+        m_compiler->getLangOpts().CPlusPlus = false;
+        m_compiler->getLangOpts().CPlusPlus11 = false;        
+      }
 /// @mulle-objc@ change to Mulle runtime <
 
       if (process_sp->GetObjCLanguageRuntime()->HasNewLiteralsAndIndexing())
@@ -902,7 +908,9 @@ lldb_private::Status ClangExpressionParser::PrepareForExecution(
           DiagnosticManager install_diagnostics;
 
           if (!dynamic_checkers->Install(install_diagnostics, exe_ctx)) {
-            if (install_diagnostics.Diagnostics().size())
+/// @mulle-lldb@ fix a bug >
+            if (! install_diagnostics.Diagnostics().size())
+/// @mulle-lldb@ fix a bug <
               err.SetErrorString("couldn't install checkers, unknown error");
             else
               err.SetErrorString(install_diagnostics.GetString().c_str());

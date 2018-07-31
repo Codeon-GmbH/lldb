@@ -3130,6 +3130,12 @@ protected:
 
   enum { eCanJITDontKnow = 0, eCanJITYes, eCanJITNo } m_can_jit;
 
+// @mulle-lldb@ avoid failed threadplan calling formatters that execute a threadplan again >
+public:
+  bool isThreadPlanLocked( void);
+protected:
+// @mulle-lldb@ avoid failed threadplan calling formatters that execute a threadplan again <
+
   size_t RemoveBreakpointOpcodesFromBuffer(lldb::addr_t addr, size_t size,
                                            uint8_t *buf) const;
 
