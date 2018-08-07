@@ -135,7 +135,6 @@ struct BufStruct {
 UtilityFunction *MulleObjCRuntimeV1::CreateObjectChecker(const char *name) {
   std::unique_ptr<BufStruct> buf(new BufStruct);
 
-#ifndef NDEBUG
   int strformatsize = snprintf(&buf->contents[0], sizeof(buf->contents),
 "extern \"C\"\n"
 "{\n"
@@ -143,7 +142,6 @@ UtilityFunction *MulleObjCRuntimeV1::CreateObjectChecker(const char *name) {
 "}",
                   name);
   assert(strformatsize < (int)sizeof(buf->contents));
-#endif
 
   Status error;
   return GetTargetRef().GetUtilityFunctionForLanguage(
@@ -406,6 +404,8 @@ lldb::addr_t MulleObjCRuntimeV1::GetISAHashTablePointer( Process *process) {
    if (!objc_module_sp)
       return LLDB_INVALID_ADDRESS;
 
+   if( process->isThreadPlanLocked())
+      return LLDB_INVALID_ADDRESS;
    // that pointer is fluctuating!
    return CallDangerousGetClassTableFunction( process);
 }
@@ -435,6 +435,7 @@ void MulleObjCRuntimeV1::UpdateISAToDescriptorMapIfNeeded() {
       lldb::addr_t hash_table_ptr = GetISAHashTablePointer( process);
       if (hash_table_ptr == LLDB_INVALID_ADDRESS) {
          m_isa_to_descriptor_stop_id = UINT32_MAX;
+         return; // can't do anything
       }
 
       // Read the mulle_concurrent_hashtable struct:
