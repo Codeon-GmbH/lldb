@@ -284,11 +284,11 @@ bool ExpressionSourceCode::GetText(std::string &text,
     /// @mulle-objc@ hack some mulle-objc-runtime stuff into the expression >
     /// @mulle-objc@ MUST CHANGE VALUES THIS FOR EACH LLDB RELEASE!!
     wrap_stream.Printf("\
-static const struct clang_mulle_objc_compiler_info\n\
+static const struct mulle_clang_objccompilerinfo\n\
 {\n\
   unsigned int   load_version;\n\
   unsigned int   runtime_version;\n\
-} __mulle_objc_compiler_info =\n\
+} __mulle_objc_objccompilerinfo =\n\
 {\n\
   12, // load version must match \n\
   0   // 0 to not emit __load_mulle_objc\n\

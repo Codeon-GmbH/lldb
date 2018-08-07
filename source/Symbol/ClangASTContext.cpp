@@ -8452,7 +8452,7 @@ clang::ObjCMethodDecl *ClangASTContext::AddMethodToObjCObjectType(
     for (unsigned param_index = 0; param_index < num_args; ++param_index) {
 /// @mulle-objc@ add this for parameter names >
       identifier = nullptr;
-      if( function_param_decls.size() < param_index)
+      if( param_index < function_param_decls.size())
         identifier = function_param_decls[ param_index]->getIdentifier();
 /// @mulle-objc@ add this for parameter names <
 
