@@ -53,16 +53,13 @@ using namespace lldb_private;
 static const char *g_lookup_implementation_function_name =
     "__lldb_objc_find_implementation_for_selector";
 
-static const char *g_lookup_implementation_function_code =
-"extern \"C\"\n"
-"{\n"
+static const char *g_lookup_implementation_function_code = 
+
 #include "mulle-objc-lookup-imp.inc"
-"}\n";
+;
 
 
 MulleObjCTrampolineHandler::~MulleObjCTrampolineHandler() {}
-
-
 
 // what should we step through anyway ?
 // I would say "front" facing function calls emitted by -O0
@@ -226,6 +223,7 @@ MulleObjCTrampolineHandler::SetupDispatchFunction(Thread &thread,
         if (!m_impl_code->Install(diagnostics, exe_ctx)) {
           if (log) {
             log->Printf("Failed to install implementation lookup \"%s\".", g_lookup_implementation_function_name);
+            log->Printf( "Source code: ------\n%s\n------\n", m_lookup_implementation_function_code);
             diagnostics.Dump(log);
           }
           m_impl_code.reset();

@@ -41,11 +41,11 @@ using namespace lldb_private;
 static const char *g_dangerous_function_name =
 "__lldb_objc_get_dangerous_class_storage";
 
-static const char *g_dangerous_function_code =
-"extern \"C\"\n"
-"{\n"
+static const char *g_dangerous_function_code = 
+
 #include "mulle-objc-dangerous-class-storage.inc"
-"}\n";
+
+;
 
 
 MulleObjCRuntimeV1::MulleObjCRuntimeV1(Process *process)
@@ -132,14 +132,18 @@ struct BufStruct {
   char contents[2048];
 };
 
+static char   object_checker_c[] = 
+
+#include "mulle-objc-object-checker.inc"
+
+;
+
+
 UtilityFunction *MulleObjCRuntimeV1::CreateObjectChecker(const char *name) {
   std::unique_ptr<BufStruct> buf(new BufStruct);
 
   int strformatsize = snprintf(&buf->contents[0], sizeof(buf->contents),
-"extern \"C\"\n"
-"{\n"
-#include "mulle-objc-object-checker.inc"
-"}",
+                               object_checker_c,
                   name);
   assert(strformatsize < (int)sizeof(buf->contents));
 
