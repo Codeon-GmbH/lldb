@@ -294,7 +294,6 @@ MulleObjCTrampolineHandler::GetDispatchFunctionForPCViaMap( lldb::addr_t curr_pc
 }
 
 
-
 lldb::addr_t
 MulleObjCTrampolineHandler::ReadIndirectJMPQ_X86_64( lldb::addr_t curr_pc)
 {
@@ -700,7 +699,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
    if (log && log->GetVerbose())
       flag_value.GetScalar() = 1;
    else
-      flag_value.GetScalar() = 1;  // FIXME - Set to 0 when debugging is done.
+      flag_value.GetScalar() = 0;  // FIXME - Set to 0 when debugging is done.
    dispatch_values.PushValue (flag_value);
 
 

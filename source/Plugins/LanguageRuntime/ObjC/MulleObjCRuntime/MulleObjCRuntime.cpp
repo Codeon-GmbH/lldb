@@ -35,6 +35,8 @@
 #include "lldb/Utility/Status.h"
 #include "lldb/Utility/StreamString.h"
 
+#define MULLE_LOG   LIBLLDB_LOG_LANGUAGE
+
 #include <vector>
 
 using namespace lldb;
@@ -319,7 +321,7 @@ static bool _IsSymbolARuntimeThunk(const Symbol &symbol) {
   static ConstString g_c_08 = ConstString( "_mulle_objc_object_call2_needs_cache");
   static ConstString g_c_09 = ConstString( "_mulle_objc_object_call_class");
   static ConstString g_c_10 = ConstString( "_mulle_objc_object_call_class_needs_cache");
-  static ConstString g_c_11 = ConstString( "_mulle_objc_object_call_class");
+  static ConstString g_c_11 = ConstString( "_mulle_objc_object_unfailingcall_methodid");
   static ConstString g_c_12 = ConstString( "_mulle_objc_object_noncachingcall_class");
 
 
@@ -327,6 +329,8 @@ static bool _IsSymbolARuntimeThunk(const Symbol &symbol) {
   static ConstString g_c_13 = ConstString( "_mulle_objc_object_supercall");
   static ConstString g_c_14 = ConstString( "_mulle_objc_object_inline_supercall");
   static ConstString g_c_15 = ConstString( "_mulle_objc_object_partialinline_supercall");
+
+
 
   ConstString symbol_name = symbol.GetName();
 
@@ -369,9 +373,12 @@ bool MulleObjCRuntime::IsSymbolARuntimeThunk(const Symbol &symbol) {
 
   bool   flag;
 
+  Log *log(lldb_private::GetLogIfAllCategoriesSet(MULLE_LOG));
+
   flag = _IsSymbolARuntimeThunk( symbol);
-//  fprintf( stderr, "\"%s\" is %s Thunk", symbol.GetName().GetCString(),
-//   flag ? "a" : "not a");
+  if( log)
+    log->Printf( "\"%s\" is %s thunk", symbol.GetName().GetCString(),
+      flag ? "a" : "not a");
   return( flag);
 }
 

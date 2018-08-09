@@ -97,7 +97,7 @@ bool ThreadPlanShouldStopHere::DefaultShouldStopHereCallback(
       bool is_thunk = false;
       ProcessSP process_sp(current_plan->GetThread().GetProcess());
       enum LanguageType languages_to_try[] = {
-          eLanguageTypeSwift, eLanguageTypeObjC, eLanguageTypeC_plus_plus};
+          eLanguageTypeObjC, eLanguageTypeSwift, eLanguageTypeC_plus_plus};
 
       for (enum LanguageType language : languages_to_try) {
         language_runtime = process_sp->GetLanguageRuntime(language);
