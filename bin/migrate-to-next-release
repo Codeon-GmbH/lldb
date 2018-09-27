@@ -92,7 +92,7 @@ migrate()
    git tag "squashed_${OLD_MULLE_DEV_BRANCH}" "${OLD_MULLE_DEV_BRANCH}" || exit 1
 
    # count our change marker texts
-   BEFORELIST="`grep -R '@mulle-objc' include/ lib/ source/ `"
+   BEFORELIST="`grep -R '@mulle-objc' include/ source/ `"
 
    #
    # Now get the new stuff
@@ -113,7 +113,7 @@ migrate()
 cleanup()
 {
    # count our change marker texts again
-   AFTERLIST="`grep -R '@mulle-objc' include/ lib/ source/`"
+   AFTERLIST="`grep -R '@mulle-objc' include/ source/`"
 
    if [ "${BEFORELIST}" != "${AFTERLIST}" ]
    then
@@ -139,7 +139,7 @@ cleanup()
 #
 
 case "$1" in
-   "continue|cleanup")
+   'continue'|'cleanup')
    ;;
 
    *)
