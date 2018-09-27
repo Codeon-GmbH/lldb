@@ -1,4 +1,4 @@
-//===-- AppleObjCRuntime.cpp -------------------------------------*- C++
+//===-- MulleObjCRuntime.cpp -------------------------------------*- C++
 //-*-===//
 //
 //                     The LLVM Compiler Infrastructure
@@ -8,8 +8,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "AppleObjCRuntime.h"
-#include "AppleObjCTrampolineHandler.h"
+#include "MulleObjCRuntime.h"
+#include "MulleObjCTrampolineHandler.h"
 
 #include "clang/AST/Type.h"
 
@@ -35,6 +35,8 @@
 #include "lldb/Utility/Status.h"
 #include "lldb/Utility/StreamString.h"
 
+#define MULLE_LOG   LIBLLDB_LOG_LANGUAGE
+
 #include <vector>
 
 using namespace lldb;
@@ -42,32 +44,35 @@ using namespace lldb_private;
 
 static constexpr std::chrono::seconds g_po_function_timeout(15);
 
-AppleObjCRuntime::~AppleObjCRuntime() {}
+MulleObjCRuntime::~MulleObjCRuntime() {}
 
-AppleObjCRuntime::AppleObjCRuntime(Process *process)
+MulleObjCRuntime::MulleObjCRuntime(Process *process)
     : ObjCLanguageRuntime(process), m_read_objc_library(false),
       m_objc_trampoline_handler_ap(), m_Foundation_major() {
   ReadObjCLibraryIfNeeded(process->GetTarget().GetImages());
 }
 
-bool AppleObjCRuntime::GetObjectDescription(Stream &str, ValueObject &valobj) {
+bool MulleObjCRuntime::GetObjectDescription(Stream &str, ValueObject &valobj) {
   CompilerType compiler_type(valobj.GetCompilerType());
   bool is_signed;
   // ObjC objects can only be pointers (or numbers that actually represents
-  // pointers but haven't been typecast, because reasons..)
+  // pointers
+  // but haven't been typecast, because reasons..)
   if (!compiler_type.IsIntegerType(is_signed) && !compiler_type.IsPointerType())
     return false;
 
-  // Make the argument list: we pass one arg, the address of our pointer, to
-  // the print function.
+  // Make the argument list: we pass one arg, the address of our pointer, to the
+  // print function.
   Value val;
 
   if (!valobj.ResolveValue(val.GetScalar()))
     return false;
 
   // Value Objects may not have a process in their ExecutionContextRef.  But we
-  // need to have one in the ref we pass down to eventually call description.
-  // Get it from the target if it isn't present.
+  // need to have one
+  // in the ref we pass down to eventually call description.  Get it from the
+  // target if it isn't
+  // present.
   ExecutionContext exe_ctx;
   if (valobj.GetProcessSP()) {
     exe_ctx = ExecutionContext(valobj.GetExecutionContextRef());
@@ -78,7 +83,7 @@ bool AppleObjCRuntime::GetObjectDescription(Stream &str, ValueObject &valobj) {
   }
   return GetObjectDescription(str, val, exe_ctx.GetBestExecutionContextScope());
 }
-bool AppleObjCRuntime::GetObjectDescription(Stream &strm, Value &value,
+bool MulleObjCRuntime::GetObjectDescription(Stream &strm, Value &value,
                                             ExecutionContextScope *exe_scope) {
   if (!m_read_objc_library)
     return false;
@@ -191,7 +196,8 @@ bool AppleObjCRuntime::GetObjectDescription(Stream &strm, Value &value,
   return cstr_len > 0;
 }
 
-lldb::ModuleSP AppleObjCRuntime::GetObjCModule() {
+// why this again ???
+lldb::ModuleSP MulleObjCRuntime::GetMulleObjCRuntimeModule() {
   ModuleSP module_sp(m_objc_module_wp.lock());
   if (module_sp)
     return module_sp;
@@ -201,7 +207,7 @@ lldb::ModuleSP AppleObjCRuntime::GetObjCModule() {
     const ModuleList &modules = process->GetTarget().GetImages();
     for (uint32_t idx = 0; idx < modules.GetSize(); idx++) {
       module_sp = modules.GetModuleAtIndex(idx);
-      if (AppleObjCRuntime::AppleIsModuleObjCLibrary(module_sp)) {
+      if (MulleObjCRuntime::IsMulleObjCRuntimeModule(module_sp)) {
         m_objc_module_wp = module_sp;
         return module_sp;
       }
@@ -210,7 +216,7 @@ lldb::ModuleSP AppleObjCRuntime::GetObjCModule() {
   return ModuleSP();
 }
 
-Address *AppleObjCRuntime::GetPrintForDebuggerAddr() {
+Address *MulleObjCRuntime::GetPrintForDebuggerAddr() {
   if (!m_PrintForDebugger_addr.get()) {
     const ModuleList &modules = m_process->GetTarget().GetImages();
 
@@ -231,14 +237,14 @@ Address *AppleObjCRuntime::GetPrintForDebuggerAddr() {
   return m_PrintForDebugger_addr.get();
 }
 
-bool AppleObjCRuntime::CouldHaveDynamicValue(ValueObject &in_value) {
+bool MulleObjCRuntime::CouldHaveDynamicValue(ValueObject &in_value) {
   return in_value.GetCompilerType().IsPossibleDynamicType(
       NULL,
       false, // do not check C++
       true); // check ObjC
 }
 
-bool AppleObjCRuntime::GetDynamicTypeAndAddress(
+bool MulleObjCRuntime::GetDynamicTypeAndAddress(
     ValueObject &in_value, lldb::DynamicValueType use_dynamic,
     TypeAndOrName &class_type_or_name, Address &address,
     Value::ValueType &value_type) {
@@ -246,7 +252,7 @@ bool AppleObjCRuntime::GetDynamicTypeAndAddress(
 }
 
 TypeAndOrName
-AppleObjCRuntime::FixUpDynamicType(const TypeAndOrName &type_and_or_name,
+MulleObjCRuntime::FixUpDynamicType(const TypeAndOrName &type_and_or_name,
                                    ValueObject &static_value) {
   CompilerType static_type(static_value.GetCompilerType());
   Flags static_type_flags(static_type.GetTypeInfo());
@@ -254,9 +260,10 @@ AppleObjCRuntime::FixUpDynamicType(const TypeAndOrName &type_and_or_name,
   TypeAndOrName ret(type_and_or_name);
   if (type_and_or_name.HasType()) {
     // The type will always be the type of the dynamic object.  If our parent's
-    // type was a pointer, then our type should be a pointer to the type of the
-    // dynamic object.  If a reference, then the original type should be
-    // okay...
+    // type was a pointer,
+    // then our type should be a pointer to the type of the dynamic object.  If
+    // a reference, then the original type
+    // should be okay...
     CompilerType orig_type = type_and_or_name.GetCompilerType();
     CompilerType corrected_type = orig_type;
     if (static_type_flags.AllSet(eTypeIsPointer))
@@ -275,68 +282,141 @@ AppleObjCRuntime::FixUpDynamicType(const TypeAndOrName &type_and_or_name,
   return ret;
 }
 
-bool AppleObjCRuntime::AppleIsModuleObjCLibrary(const ModuleSP &module_sp) {
-  if (module_sp) {
-    const FileSpec &module_file_spec = module_sp->GetFileSpec();
-    static ConstString ObjCName("libobjc.A.dylib");
+bool MulleObjCRuntime::IsMulleObjCRuntimeModule(const ModuleSP &module_sp) {
+   if (! module_sp)
+      return false;
 
-    if (module_file_spec) {
-      if (module_file_spec.GetFilename() == ObjCName)
-        return true;
-    }
-  }
-  return false;
+   SymbolContextList contexts;
+
+   //
+   // if mulle_objc_lldb_lookup_implementation then this module
+   // contains the mulle_objc_runtime lldb code
+   //
+   if( module_sp->FindSymbolsWithNameAndType(
+                                             ConstString( "mulle_objc_lldb_lookup_implementation"),
+                                             eSymbolTypeCode, contexts))
+   {
+      //fprintf( stderr, "MulleObjC runtime IN DA HOUSE at \"%s\"!!\n",
+      //        module_sp->GetFileSpec().GetFilename().AsCString());
+      return true;
+   }
+   return false;
 }
 
-// we use the version of Foundation to make assumptions about the ObjC runtime
-// on a target
-uint32_t AppleObjCRuntime::GetFoundationVersion() {
-  if (!m_Foundation_major.hasValue()) {
-    const ModuleList &modules = m_process->GetTarget().GetImages();
-    for (uint32_t idx = 0; idx < modules.GetSize(); idx++) {
-      lldb::ModuleSP module_sp = modules.GetModuleAtIndex(idx);
-      if (!module_sp)
-        continue;
-      if (strcmp(module_sp->GetFileSpec().GetFilename().AsCString(""),
-                 "Foundation") == 0) {
-        m_Foundation_major = module_sp->GetVersion().getMajor();
-        return *m_Foundation_major;
-      }
-    }
-    return LLDB_INVALID_MODULE_VERSION;
-  } else
-    return m_Foundation_major.getValue();
+
+static bool _IsSymbolARuntimeThunk(const Symbol &symbol) {
+
+// *** object calls ***
+
+  static ConstString g_c_01 = ConstString( "mulle_objc_object_call");
+  static ConstString g_c_02 = ConstString( "mulle_objc_object_inline_constant_methodid_call");
+  static ConstString g_c_03 = ConstString( "mulle_objc_object_constant_methodid_call");
+  static ConstString g_c_04 = ConstString( "mulle_objc_object_inline_variable_methodid_call");
+  static ConstString g_c_05 = ConstString( "mulle_objc_objects_call");
+
+// *** internal calls ***
+
+  static ConstString g_c_06 = ConstString( "_mulle_objc_object_call2");
+  static ConstString g_c_07 = ConstString( "_mulle_objc_object_call2_empty_cache");
+  static ConstString g_c_08 = ConstString( "_mulle_objc_object_call2_needs_cache");
+  static ConstString g_c_09 = ConstString( "_mulle_objc_object_call_class");
+  static ConstString g_c_10 = ConstString( "_mulle_objc_object_call_class_needs_cache");
+  static ConstString g_c_11 = ConstString( "_mulle_objc_object_unfailingcall_methodid");
+  static ConstString g_c_12 = ConstString( "_mulle_objc_object_noncachingcall_class");
+
+
+// *** super calls ***
+  static ConstString g_c_13 = ConstString( "_mulle_objc_object_supercall");
+  static ConstString g_c_14 = ConstString( "_mulle_objc_object_inline_supercall");
+  static ConstString g_c_15 = ConstString( "_mulle_objc_object_partialinline_supercall");
+
+
+
+  ConstString symbol_name = symbol.GetName();
+
+  if( ConstString::Equals( symbol_name, g_c_01, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_02, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_03, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_04, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_05, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_06, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_07, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_08, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_09, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_10, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_11, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_12, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_13, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_14, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_15, true))
+    return( true);
+
+  return( false);
 }
 
-void AppleObjCRuntime::GetValuesForGlobalCFBooleans(lldb::addr_t &cf_true,
+
+bool MulleObjCRuntime::IsSymbolARuntimeThunk(const Symbol &symbol) {
+
+  bool   flag;
+
+  Log *log(lldb_private::GetLogIfAllCategoriesSet(MULLE_LOG));
+
+  flag = _IsSymbolARuntimeThunk( symbol);
+  if( log)
+    log->Printf( "\"%s\" is %s thunk", symbol.GetName().GetCString(),
+      flag ? "a" : "not a");
+  return( flag);
+}
+
+
+void MulleObjCRuntime::GetValuesForGlobalCFBooleans(lldb::addr_t &cf_true,
                                                     lldb::addr_t &cf_false) {
   cf_true = cf_false = LLDB_INVALID_ADDRESS;
 }
 
-bool AppleObjCRuntime::IsModuleObjCLibrary(const ModuleSP &module_sp) {
-  return AppleIsModuleObjCLibrary(module_sp);
+bool MulleObjCRuntime::IsModuleObjCLibrary(const ModuleSP &module_sp) {
+  return IsMulleObjCRuntimeModule(module_sp);
 }
 
-bool AppleObjCRuntime::ReadObjCLibrary(const ModuleSP &module_sp) {
+bool MulleObjCRuntime::ReadObjCLibrary(const ModuleSP &module_sp) {
   // Maybe check here and if we have a handler already, and the UUID of this
-  // module is the same as the one in the current module, then we don't have to
-  // reread it?
+  // module is the same as the one in the
+  // current module, then we don't have to reread it?
   m_objc_trampoline_handler_ap.reset(
-      new AppleObjCTrampolineHandler(m_process->shared_from_this(), module_sp));
-  if (m_objc_trampoline_handler_ap.get() != NULL) {
+      new MulleObjCTrampolineHandler(m_process->shared_from_this(), module_sp));
+  if (m_objc_trampoline_handler_ap.get() != NULL && m_objc_trampoline_handler_ap.get()->CanStepThrough()) {
     m_read_objc_library = true;
+     // fprintf( stderr, "ReadObjCLibrary succeeds\n");
     return true;
-  } else
-    return false;
+  }
+
+   //  fprintf( stderr, "ReadObjCLibrary fails\n");
+  m_read_objc_library = false; // pedantically reset
+  return false;
 }
 
-ThreadPlanSP AppleObjCRuntime::GetStepThroughTrampolinePlan(Thread &thread,
+ThreadPlanSP MulleObjCRuntime::GetStepThroughTrampolinePlan(Thread &thread,
                                                             StackID &return_stack_id,
                                                             bool stop_others) {
   ThreadPlanSP thread_plan_sp;
+
   if (m_objc_trampoline_handler_ap.get())
     thread_plan_sp = m_objc_trampoline_handler_ap->GetStepThroughDispatchPlan(
-        thread, stop_others);
+        thread, return_stack_id, stop_others);
   return thread_plan_sp;
 }
 
@@ -344,14 +424,11 @@ ThreadPlanSP AppleObjCRuntime::GetStepThroughTrampolinePlan(Thread &thread,
 // Static Functions
 //------------------------------------------------------------------
 ObjCLanguageRuntime::ObjCRuntimeVersions
-AppleObjCRuntime::GetObjCVersion(Process *process, ModuleSP &objc_module_sp) {
+MulleObjCRuntime::GetObjCVersion(Process *process, ModuleSP &objc_module_sp) {
   if (!process)
     return ObjCRuntimeVersions::eObjC_VersionUnknown;
 
   Target &target = process->GetTarget();
-  if (target.GetArchitecture().GetTriple().getVendor() !=
-      llvm::Triple::VendorType::Apple)
-    return ObjCRuntimeVersions::eObjC_VersionUnknown;
 
   const ModuleList &target_modules = target.GetImages();
   std::lock_guard<std::recursive_mutex> gaurd(target_modules.GetMutex());
@@ -359,35 +436,23 @@ AppleObjCRuntime::GetObjCVersion(Process *process, ModuleSP &objc_module_sp) {
   size_t num_images = target_modules.GetSize();
   for (size_t i = 0; i < num_images; i++) {
     ModuleSP module_sp = target_modules.GetModuleAtIndexUnlocked(i);
-    // One tricky bit here is that we might get called as part of the initial
-    // module loading, but before all the pre-run libraries get winnowed from
-    // the module list.  So there might actually be an old and incorrect ObjC
-    // library sitting around in the list, and we don't want to look at that.
-    // That's why we call IsLoadedInTarget.
 
-    if (AppleIsModuleObjCLibrary(module_sp) &&
-        module_sp->IsLoadedInTarget(&target)) {
-      objc_module_sp = module_sp;
-      ObjectFile *ofile = module_sp->GetObjectFile();
-      if (!ofile)
-        return ObjCRuntimeVersions::eObjC_VersionUnknown;
+     // isLoadedInTarget doesn't work for me, since we get called
+     // _while_ loading apparently so main f.e. will be found as
+     // a symbol, but the module itself is not loaded yet
+     // (or so it seems, as we are statically linking ?)
 
-      SectionList *sections = module_sp->GetSectionList();
-      if (!sections)
-        return ObjCRuntimeVersions::eObjC_VersionUnknown;
-      SectionSP v1_telltale_section_sp =
-          sections->FindSectionByName(ConstString("__OBJC"));
-      if (v1_telltale_section_sp) {
-        return ObjCRuntimeVersions::eAppleObjC_V1;
-      }
-      return ObjCRuntimeVersions::eAppleObjC_V2;
+     if ( // module_sp->IsLoadedInTarget(&target) &&
+        IsMulleObjCRuntimeModule(module_sp)
+        ) {
+      return ObjCRuntimeVersions::eMulleObjC_V1;
     }
   }
 
   return ObjCRuntimeVersions::eObjC_VersionUnknown;
 }
 
-void AppleObjCRuntime::SetExceptionBreakpoints() {
+void MulleObjCRuntime::SetExceptionBreakpoints() {
   const bool catch_bp = false;
   const bool throw_bp = true;
   const bool is_internal = true;
@@ -402,7 +467,7 @@ void AppleObjCRuntime::SetExceptionBreakpoints() {
     m_objc_exception_bp_sp->SetEnabled(true);
 }
 
-void AppleObjCRuntime::ClearExceptionBreakpoints() {
+void MulleObjCRuntime::ClearExceptionBreakpoints() {
   if (!m_process)
     return;
 
@@ -411,11 +476,11 @@ void AppleObjCRuntime::ClearExceptionBreakpoints() {
   }
 }
 
-bool AppleObjCRuntime::ExceptionBreakpointsAreSet() {
+bool MulleObjCRuntime::ExceptionBreakpointsAreSet() {
   return m_objc_exception_bp_sp && m_objc_exception_bp_sp->IsEnabled();
 }
 
-bool AppleObjCRuntime::ExceptionBreakpointsExplainStop(
+bool MulleObjCRuntime::ExceptionBreakpointsExplainStop(
     lldb::StopInfoSP stop_reason) {
   if (!m_process)
     return false;
@@ -428,48 +493,25 @@ bool AppleObjCRuntime::ExceptionBreakpointsExplainStop(
       break_site_id, m_objc_exception_bp_sp->GetID());
 }
 
-bool AppleObjCRuntime::CalculateHasNewLiteralsAndIndexing() {
-  if (!m_process)
-    return false;
-
-  Target &target(m_process->GetTarget());
-
-  static ConstString s_method_signature(
-      "-[NSDictionary objectForKeyedSubscript:]");
-  static ConstString s_arclite_method_signature(
-      "__arclite_objectForKeyedSubscript");
-
-  SymbolContextList sc_list;
-
-  if (target.GetImages().FindSymbolsWithNameAndType(s_method_signature,
-                                                    eSymbolTypeCode, sc_list) ||
-      target.GetImages().FindSymbolsWithNameAndType(s_arclite_method_signature,
-                                                    eSymbolTypeCode, sc_list))
-    return true;
-  else
+bool MulleObjCRuntime::CalculateHasNewLiteralsAndIndexing() {
     return false;
 }
 
-lldb::SearchFilterSP AppleObjCRuntime::CreateExceptionSearchFilter() {
-  Target &target = m_process->GetTarget();
-
-  if (target.GetArchitecture().GetTriple().getVendor() == llvm::Triple::Apple) {
-    FileSpecList filter_modules;
-    filter_modules.Append(FileSpec("libobjc.A.dylib", false));
-    return target.GetSearchFilterForModuleList(&filter_modules);
-  } else {
+lldb::SearchFilterSP MulleObjCRuntime::CreateExceptionSearchFilter() {
     return LanguageRuntime::CreateExceptionSearchFilter();
-  }
 }
 
-void AppleObjCRuntime::ReadObjCLibraryIfNeeded(const ModuleList &module_list) {
-  if (!HasReadObjCLibrary()) {
+void MulleObjCRuntime::ReadObjCLibraryIfNeeded(const ModuleList &module_list) {
+   // it seems, that when you run again ModulesDidLoad gets called
+   // and this "caching" fcks things up
+   //if (!HasReadObjCLibrary())
+  {
     std::lock_guard<std::recursive_mutex> guard(module_list.GetMutex());
 
     size_t num_modules = module_list.GetSize();
     for (size_t i = 0; i < num_modules; i++) {
       auto mod = module_list.GetModuleAtIndex(i);
-      if (IsModuleObjCLibrary(mod)) {
+      if(IsModuleObjCLibrary(mod)) {
         ReadObjCLibrary(mod);
         break;
       }
@@ -477,6 +519,6 @@ void AppleObjCRuntime::ReadObjCLibraryIfNeeded(const ModuleList &module_list) {
   }
 }
 
-void AppleObjCRuntime::ModulesDidLoad(const ModuleList &module_list) {
+void MulleObjCRuntime::ModulesDidLoad(const ModuleList &module_list) {
   ReadObjCLibraryIfNeeded(module_list);
 }

@@ -41,6 +41,9 @@ public:
     eObjC_VersionUnknown = 0,
     eAppleObjC_V1 = 1,
     eAppleObjC_V2 = 2
+  // @mulle-lldb@ add runtime enum >
+    , eMulleObjC_V1 = 1848
+  // @mulle-lldb@ add runtime enum <
   };
 
   typedef lldb::addr_t ObjCISA;
@@ -222,6 +225,7 @@ public:
   virtual bool HasReadObjCLibrary() = 0;
 
   virtual lldb::ThreadPlanSP GetStepThroughTrampolinePlan(Thread &thread,
+                                                          StackID &return_stack_id,
                                                           bool stop_others) = 0;
 
   lldb::addr_t LookupInMethodCache(lldb::addr_t class_addr, lldb::addr_t sel);

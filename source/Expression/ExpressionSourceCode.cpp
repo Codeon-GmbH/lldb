@@ -281,6 +281,22 @@ bool ExpressionSourceCode::GetText(std::string &text,
                        debug_macros_stream.GetData(), g_expression_prefix,
                        target_specific_defines, m_prefix.c_str());
 
+    /// @mulle-objc@ hack some mulle-objc-runtime stuff into the expression >
+    /// @mulle-objc@ MUST CHANGE VALUES THIS FOR EACH LLDB RELEASE!!
+    wrap_stream.Printf("\
+static const struct mulle_clang_objccompilerinfo\n\
+{\n\
+  unsigned int   load_version;\n\
+  unsigned int   runtime_version;\n\
+} __mulle_objc_objccompilerinfo =\n\
+{\n\
+  12, // load version must match \n\
+  0   // 0 to not emit __load_mulle_objc\n\
+};\n\
+");
+
+    /// @mulle-objc@ hack some mulle-objc-runtime stuff into the expression <
+
     // First construct a tagged form of the user expression so we can find it
     // later:
     std::string tagged_body;

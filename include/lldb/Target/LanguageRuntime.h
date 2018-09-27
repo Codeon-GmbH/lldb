@@ -125,6 +125,10 @@ public:
                               bool throw_bp);
   Process *GetProcess() { return m_process; }
 
+  // @mulle-lldb@ code from swift-lldb  >
+  virtual bool IsSymbolARuntimeThunk(const Symbol &symbol) { return false; }
+  // @mulle-lldb@ code from swift-lldb  <
+ 
   Target &GetTargetRef() { return m_process->GetTarget(); }
 
   virtual lldb::BreakpointResolverSP

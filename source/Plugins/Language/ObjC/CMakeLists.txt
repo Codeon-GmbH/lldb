@@ -30,6 +30,9 @@ add_lldb_library(lldbPluginObjCLanguage PLUGIN
     lldbSymbol
     lldbTarget
     lldbUtility
+# @mulle-objc@ >
+    lldbPluginMulleObjCRuntime
+# @mulle-objc@ <
     lldbPluginAppleObjCRuntime
 
   EXTRA_CXXFLAGS ${EXTRA_CXXFLAGS}
