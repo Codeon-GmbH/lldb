@@ -309,26 +309,26 @@ static bool _IsSymbolARuntimeThunk(const Symbol &symbol) {
 // *** object calls ***
 
   static ConstString g_c_01 = ConstString( "mulle_objc_object_call");
-  static ConstString g_c_02 = ConstString( "mulle_objc_object_inline_constant_methodid_call");
-  static ConstString g_c_03 = ConstString( "mulle_objc_object_constant_methodid_call");
-  static ConstString g_c_04 = ConstString( "mulle_objc_object_inline_variable_methodid_call");
+  static ConstString g_c_02 = ConstString( "mulle_objc_object_inlinecall_constantmethodid");
+  static ConstString g_c_03 = ConstString( "mulle_objc_object_call_constantmethodid");
+  static ConstString g_c_04 = ConstString( "mulle_objc_object_inlinecall_variablemethodid");
   static ConstString g_c_05 = ConstString( "mulle_objc_objects_call");
 
 // *** internal calls ***
 
   static ConstString g_c_06 = ConstString( "_mulle_objc_object_call2");
-  static ConstString g_c_07 = ConstString( "_mulle_objc_object_call2_empty_cache");
-  static ConstString g_c_08 = ConstString( "_mulle_objc_object_call2_needs_cache");
+  static ConstString g_c_07 = ConstString( "_mulle_objc_object_call2_emptycache");
+  static ConstString g_c_08 = ConstString( "_mulle_objc_object_call2_needcache");
   static ConstString g_c_09 = ConstString( "_mulle_objc_object_call_class");
-  static ConstString g_c_10 = ConstString( "_mulle_objc_object_call_class_needs_cache");
-  static ConstString g_c_11 = ConstString( "_mulle_objc_object_unfailingcall_methodid");
-  static ConstString g_c_12 = ConstString( "_mulle_objc_object_noncachingcall_class");
+  static ConstString g_c_10 = ConstString( "_mulle_objc_object_call_class_needcache");
+  static ConstString g_c_11 = ConstString( "_mulle_objc_object_call_methodid_nofail");
+  static ConstString g_c_12 = ConstString( "_mulle_objc_object_call_class_nocache");
 
 
 // *** super calls ***
   static ConstString g_c_13 = ConstString( "_mulle_objc_object_supercall");
-  static ConstString g_c_14 = ConstString( "_mulle_objc_object_inline_supercall");
-  static ConstString g_c_15 = ConstString( "_mulle_objc_object_partialinline_supercall");
+  static ConstString g_c_14 = ConstString( "_mulle_objc_object_inlinesupercall");
+  static ConstString g_c_15 = ConstString( "_mulle_objc_object_partialinlinesupercall");
 
 
 

@@ -142,10 +142,12 @@ static char   object_checker_c[] =
 UtilityFunction *MulleObjCRuntimeV1::CreateObjectChecker(const char *name) {
   std::unique_ptr<BufStruct> buf(new BufStruct);
 
+#ifndef NDEBUG
   int strformatsize = snprintf(&buf->contents[0], sizeof(buf->contents),
                                object_checker_c,
                   name);
   assert(strformatsize < (int)sizeof(buf->contents));
+#endif
 
   Status error;
   return GetTargetRef().GetUtilityFunctionForLanguage(

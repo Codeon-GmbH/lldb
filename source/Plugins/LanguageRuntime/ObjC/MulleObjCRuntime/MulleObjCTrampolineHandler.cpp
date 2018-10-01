@@ -69,7 +69,7 @@ MulleObjCTrampolineHandler::~MulleObjCTrampolineHandler() {}
 //   _mulle_objc_object_supercall
 //
 // We should also step through
-//   mulle_objc_unfailingfastlookup_infraclass
+//   mulle_objc_fastlookup_infraclass_nofail
 // but we can't for now.
 //
 const MulleObjCTrampolineHandler::DispatchFunction
@@ -184,7 +184,7 @@ MulleObjCTrampolineHandler::MulleObjCTrampolineHandler(
   }
 
   m_classlookup_addr = LookupFunctionSymbol( process_sp,
-                                             "mulle_objc_unfailingfastlookup_infraclass");
+                                             "mulle_objc_fastlookup_infraclass_nofail");
 }
 
 
@@ -633,7 +633,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
       // Yup, it was in the cache, so we can run to that address directly.
 
       if (log)
-         log->Printf ("Mulle: Found implementation address in cache: 0x%. Return run to address plan." PRIx64, impl_addr);
+         log->Printf ("Mulle: Found implementation address in cache: 0x%" PRIx64 ". Return run to address plan.", impl_addr);
 
       ret_plan_sp.reset (new ThreadPlanRunToAddress (thread, impl_addr, stop_others));
       // fprintf( stderr, "cached return\n");
