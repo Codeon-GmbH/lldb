@@ -309,9 +309,12 @@ static bool _IsSymbolARuntimeThunk(const Symbol &symbol) {
 // *** object calls ***
 
   static ConstString g_c_01 = ConstString( "mulle_objc_object_call");
-  static ConstString g_c_02 = ConstString( "mulle_objc_object_inlinecall_constantmethodid");
-  static ConstString g_c_03 = ConstString( "mulle_objc_object_call_constantmethodid");
+  static ConstString g_c_02 = ConstString( "mulle_objc_object_inlinecall");
+  static ConstString g_c_03 = ConstString( "mulle_objc_object_partialinlinecall");
   static ConstString g_c_04 = ConstString( "mulle_objc_object_inlinecall_variablemethodid");
+
+// *** objects calls ***
+
   static ConstString g_c_05 = ConstString( "mulle_objc_objects_call");
 
 // *** internal calls ***
@@ -321,7 +324,7 @@ static bool _IsSymbolARuntimeThunk(const Symbol &symbol) {
   static ConstString g_c_08 = ConstString( "_mulle_objc_object_call2_needcache");
   static ConstString g_c_09 = ConstString( "_mulle_objc_object_call_class");
   static ConstString g_c_10 = ConstString( "_mulle_objc_object_call_class_needcache");
-  static ConstString g_c_11 = ConstString( "_mulle_objc_object_call_methodid_nofail");
+  static ConstString g_c_11 = ConstString( "_mulle_objc_object_call_class_nofail");
   static ConstString g_c_12 = ConstString( "_mulle_objc_object_call_class_nocache");
 
 

@@ -5,7 +5,7 @@
 "unsigned int   runtime_version;\n"
 "} __mulle_objc_objccompilerinfo =\n"
 "{\n"
-"12, \n"
+"14, \n"
 "0   \n"
 "};\n"
 "void   %s( void *$__lldb_obj, unsigned int $__lldb_sel)\n"

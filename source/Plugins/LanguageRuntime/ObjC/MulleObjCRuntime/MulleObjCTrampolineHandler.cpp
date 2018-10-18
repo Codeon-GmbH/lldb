@@ -53,7 +53,7 @@ using namespace lldb_private;
 static const char *g_lookup_implementation_function_name =
     "__lldb_objc_find_implementation_for_selector";
 
-static const char *g_lookup_implementation_function_code = 
+static const char *g_lookup_implementation_function_code =
 
 #include "mulle-objc-lookup-imp.inc"
 ;
@@ -70,7 +70,7 @@ MulleObjCTrampolineHandler::~MulleObjCTrampolineHandler() {}
 //
 // We should also step through
 //   mulle_objc_fastlookup_infraclass_nofail
-// but we can't for now.
+// but we can't for now. (Why not ?)
 //
 const MulleObjCTrampolineHandler::DispatchFunction
     MulleObjCTrampolineHandler::g_dispatch_functions[] = {
@@ -183,8 +183,14 @@ MulleObjCTrampolineHandler::MulleObjCTrampolineHandler(
         m_msgSend_map.insert(std::pair<lldb::addr_t, int>(sym_addr, i));
   }
 
-  m_classlookup_addr = LookupFunctionSymbol( process_sp,
-                                             "mulle_objc_fastlookup_infraclass_nofail");
+  m_classlookup_addr[ 0] = LookupFunctionSymbol( process_sp,
+                                                 "mulle_objc_global_lookup_infraclass_nofail");
+  m_classlookup_addr[ 1] = LookupFunctionSymbol( process_sp,
+                                                 "mulle_objc_global_lookup_infraclass_nofail_nofast");
+  m_classlookup_addr[ 2] = LookupFunctionSymbol( process_sp,
+                                                 "mulle_objc_object_lookup_infraclass_nofail");
+  m_classlookup_addr[ 3] = LookupFunctionSymbol( process_sp,
+                                                 "mulle_objc_object_lookup_infraclass_nofail_nofast");
 }
 
 
@@ -406,19 +412,22 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
 
    if( CanStepOver())
    {
-      if( curr_pc == m_classlookup_addr)
-      {
-         if (log)
-            log->Printf( "Mulle: Return with \"step out of class-lookup\" plan.");
+      int   i;
 
-         ret_plan_sp.reset( new ThreadPlanStepOut(
-                  thread,
-                  nullptr,
-                  false, stop_others, eVoteYes,
-                  eVoteNoOpinion, thread.GetSelectedFrameIndex(),
-                  eLazyBoolNo));
-         return( ret_plan_sp);
-      }
+      for( i = 0; i < 4; i++)
+         if( curr_pc == m_classlookup_addr[ i])
+         {
+            if (log)
+               log->Printf( "Mulle: Return with \"step out of class-lookup\" plan.");
+
+            ret_plan_sp.reset( new ThreadPlanStepOut(
+                     thread,
+                     nullptr,
+                     false, stop_others, eVoteYes,
+                     eVoteNoOpinion, thread.GetSelectedFrameIndex(),
+                     eLazyBoolNo));
+            return( ret_plan_sp);
+         }
    }
 
    // First step is to look and see if we are in one of the known ObjC dispatch functions.  We've already compiled

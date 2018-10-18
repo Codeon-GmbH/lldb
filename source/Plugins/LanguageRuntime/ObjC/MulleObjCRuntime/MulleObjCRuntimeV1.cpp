@@ -41,7 +41,7 @@ using namespace lldb_private;
 static const char *g_dangerous_function_name =
 "__lldb_objc_get_dangerous_class_storage";
 
-static const char *g_dangerous_function_code = 
+static const char *g_dangerous_function_code =
 
 #include "mulle-objc-dangerous-class-storage.inc"
 
@@ -132,11 +132,13 @@ struct BufStruct {
   char contents[2048];
 };
 
-static char   object_checker_c[] = 
+#ifndef NDEBUG
+static char   object_checker_c[] =
 
 #include "mulle-objc-object-checker.inc"
 
 ;
+#endif
 
 
 UtilityFunction *MulleObjCRuntimeV1::CreateObjectChecker(const char *name) {

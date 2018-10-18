@@ -5,7 +5,7 @@
 "unsigned int   runtime_version;\n"
 "} __mulle_objc_objccompilerinfo =\n"
 "{\n"
-"12, \n"
+"14, \n"
 "0   \n"
 "};\n"
 "void   *__lldb_objc_find_implementation_for_selector( void *object,\n"

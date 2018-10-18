@@ -42,7 +42,7 @@ public:
     eAppleObjC_V1 = 1,
     eAppleObjC_V2 = 2
   // @mulle-lldb@ add runtime enum >
-    , eMulleObjC_V1 = 1848
+    , eMulleObjC_V1 = 48
   // @mulle-lldb@ add runtime enum <
   };
 
