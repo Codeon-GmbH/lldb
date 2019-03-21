@@ -67,7 +67,6 @@ public:
   bool HasReadObjCLibrary() override { return m_read_objc_library; }
 
   lldb::ThreadPlanSP GetStepThroughTrampolinePlan(Thread &thread,
-                                                  StackID &return_stack_id,
                                                   bool stop_others) override;
 
   // Get the "libobjc.A.dylib" module from the current target if we can find
@@ -87,7 +86,7 @@ public:
   bool ExceptionBreakpointsExplainStop(lldb::StopInfoSP stop_reason) override;
 
   lldb::SearchFilterSP CreateExceptionSearchFilter() override;
-  
+
   static std::tuple<FileSpec, ConstString> GetExceptionThrowLocation();
 
   lldb::ValueObjectSP GetExceptionObjectForThread(
@@ -100,7 +99,7 @@ public:
 
   virtual void GetValuesForGlobalCFBooleans(lldb::addr_t &cf_true,
                                             lldb::addr_t &cf_false);
-                                            
+
   virtual bool IsTaggedPointer (lldb::addr_t addr) { return false; }
 
 protected:

@@ -354,52 +354,16 @@ ThreadPlanSP
 MulleObjCTrampolineHandler::GetStepOutDispatchPlan( Thread &thread,
                                                     bool stop_others)
 {
+   Status status;
    return( thread.QueueThreadPlanForStepOut( false, nullptr, false, stop_others,
                                             eVoteYes, eVoteNoOpinion,
-                                            thread.GetSelectedFrameIndex()));
-}
-
-
-void  MulleObjCTrampolineHandler::SetBreakpointForReturn( Thread &thread, const StackID &m_stack_id)
-{
-   break_id_t  m_backstop_bkpt_id;
-   uint64_t    m_start_address;
-   uint64_t    m_backstop_addr;
-
-    m_start_address = thread.GetRegisterContext()->GetPC(0);
-
-    // We are going to return back to the concrete frame 1, we might pass by
-    // some inlined code that we're in
-    // the middle of by doing this, but it's easier than trying to figure out
-    // where the inlined code might return to.
-
-    StackFrameSP return_frame_sp = thread.GetFrameWithStackID(m_stack_id);
-
-    if (return_frame_sp) {
-      m_backstop_addr = return_frame_sp->GetFrameCodeAddress().GetLoadAddress(
-          thread.CalculateTarget().get());
-      Breakpoint *return_bp =
-          thread.GetProcess()
-              ->GetTarget()
-              .CreateBreakpoint(m_backstop_addr, true, false)
-              .get();
-      if (return_bp != nullptr) {
-        return_bp->SetThreadID(thread.GetID());
-        m_backstop_bkpt_id = return_bp->GetID();
-        return_bp->SetBreakpointKind("step-through-backstop");
-      }
-      Log *log(lldb_private::GetLogIfAllCategoriesSet(LIBLLDB_LOG_STEP));
-      if (log) {
-        log->Printf("Setting backstop breakpoint %d at address: 0x%" PRIx64,
-                    m_backstop_bkpt_id, m_backstop_addr);
-      }
-   }
+                                            thread.GetSelectedFrameIndex(),
+                                            status));
 }
 
 
 ThreadPlanSP
 MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
-                                                        const StackID &stackid,
                                                         bool stop_others)
 {
    ThreadPlanSP ret_plan_sp;
@@ -621,14 +585,6 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
       impl_addr = objc_runtime->LookupInMethodCache (isa_addr, sel_addr);
       // fprintf( stderr, "impl: 0x%llx\n", (unsigned long long)impl_addr);
    }
-
-   /*
-    * At this point we "know" that we are going to step through, either directly
-    * or via that trampoline thingy... so since out message sender is not a
-    * true trampoline but a c-function, we need to set a breakpoint
-    * (this is done better with the thunk code)
-    */
-   // SetBreakpointForReturn( thread, stackid);
 
    if (impl_addr != LLDB_INVALID_ADDRESS)
    {

@@ -17,7 +17,6 @@
 #include "lldb/Core/Module.h"
 #include "lldb/Core/ModuleList.h"
 #include "lldb/Core/PluginManager.h"
-#include "lldb/Core/Scalar.h"
 #include "lldb/Core/Section.h"
 #include "lldb/Core/ValueObject.h"
 #include "lldb/Expression/DiagnosticManager.h"
@@ -413,13 +412,12 @@ bool MulleObjCRuntime::ReadObjCLibrary(const ModuleSP &module_sp) {
 }
 
 ThreadPlanSP MulleObjCRuntime::GetStepThroughTrampolinePlan(Thread &thread,
-                                                            StackID &return_stack_id,
                                                             bool stop_others) {
   ThreadPlanSP thread_plan_sp;
 
   if (m_objc_trampoline_handler_ap.get())
     thread_plan_sp = m_objc_trampoline_handler_ap->GetStepThroughDispatchPlan(
-        thread, return_stack_id, stop_others);
+        thread, stop_others);
   return thread_plan_sp;
 }
 

@@ -221,7 +221,6 @@ public:
   virtual bool HasReadObjCLibrary() = 0;
 
   virtual lldb::ThreadPlanSP GetStepThroughTrampolinePlan(Thread &thread,
-                                                          StackID &return_stack_id,
                                                           bool stop_others) = 0;
 
   lldb::addr_t LookupInMethodCache(lldb::addr_t class_addr, lldb::addr_t sel);

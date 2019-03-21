@@ -338,7 +338,6 @@ bool AppleObjCRuntime::ReadObjCLibrary(const ModuleSP &module_sp) {
 }
 
 ThreadPlanSP AppleObjCRuntime::GetStepThroughTrampolinePlan(Thread &thread,
-                                                            StackID &return_stack_id,
                                                             bool stop_others) {
   ThreadPlanSP thread_plan_sp;
   if (m_objc_trampoline_handler_ap.get())
@@ -472,10 +471,10 @@ ValueObjectSP AppleObjCRuntime::GetExceptionObjectForThread(
   if (!cpp_runtime) return ValueObjectSP();
   auto cpp_exception = cpp_runtime->GetExceptionObjectForThread(thread_sp);
   if (!cpp_exception) return ValueObjectSP();
-  
+
   auto descriptor = GetClassDescriptor(*cpp_exception.get());
   if (!descriptor || !descriptor->IsValid()) return ValueObjectSP();
-  
+
   while (descriptor) {
     ConstString class_name(descriptor->GetClassName());
     if (class_name == ConstString("NSException")) return cpp_exception;

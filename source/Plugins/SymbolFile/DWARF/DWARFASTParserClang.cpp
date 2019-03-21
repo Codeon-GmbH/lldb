@@ -3341,6 +3341,7 @@ bool DWARFASTParserClang::ParseChildMembers(
 */
 
 bool DWARFASTParserClang::ParseMulleABIParameters( const DWARFDIE &die,
+  clang::DeclContext *containing_decl_ctx,
   const CompilerType &compiler_type,
   std::vector<lldb_private::CompilerType> &function_param_types,
   std::vector<clang::ParmVarDecl *> &function_param_decls,
@@ -3373,7 +3374,7 @@ bool DWARFASTParserClang::ParseMulleABIParameters( const DWARFDIE &die,
     function_param_types.push_back( fieldType);
 
     clang::ParmVarDecl *param_var_decl =
-        m_ast.CreateParameterDeclaration(
+        m_ast.CreateParameterDeclaration( containing_decl_ctx,
             name.c_str(), fieldType, storage);
     assert(param_var_decl);
     function_param_decls.push_back(param_var_decl);
@@ -3528,6 +3529,7 @@ size_t DWARFASTParserClang::ParseChildParameters(
               Type *type = die.ResolveTypeUID(DIERef(param_type_die_form));
               if (type) {
                   ParseMulleABIParameters( die,
+                                           containing_decl_ctx,
                                            type->GetForwardCompilerType(),
                                            function_param_types,
                                            function_param_decls,

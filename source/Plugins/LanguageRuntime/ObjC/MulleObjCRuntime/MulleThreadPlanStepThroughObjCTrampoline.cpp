@@ -184,12 +184,13 @@ bool MulleThreadPlanStepThroughObjCTrampoline::ShouldStop(Event *event_ptr) {
 
       SymbolContext sc = m_thread.GetStackFrameAtIndex(0)->GetSymbolContext(
           eSymbolContextEverything);
+      Status status;
       const bool abort_other_plans = false;
       const bool first_insn = true;
       const uint32_t frame_idx = 0;
       m_run_to_sp = m_thread.QueueThreadPlanForStepOutNoShouldStop(
           abort_other_plans, &sc, first_insn, m_stop_others, eVoteNoOpinion,
-          eVoteNoOpinion, frame_idx);
+          eVoteNoOpinion, frame_idx, status);
       m_run_to_sp->SetPrivate(true);
       return false;
     }

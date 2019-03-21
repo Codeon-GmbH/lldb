@@ -31,7 +31,6 @@ public:
   ~MulleObjCTrampolineHandler();
 
   lldb::ThreadPlanSP GetStepThroughDispatchPlan( Thread &thread,
-                                                 const StackID &stackid,
                                                  bool stop_others);
   lldb::ThreadPlanSP GetStepOutDispatchPlan(Thread &thread,
                                              bool stop_others);

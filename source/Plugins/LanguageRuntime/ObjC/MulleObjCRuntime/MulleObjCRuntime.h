@@ -70,7 +70,6 @@ public:
   bool HasReadObjCLibrary() override { return m_read_objc_library; }
 
   lldb::ThreadPlanSP GetStepThroughTrampolinePlan(Thread &thread,
-                                                  StackID &return_stack_id,
                                                   bool stop_others) override;
 
   // Get the "libobjc.A.dylib" module from the current target if we can find

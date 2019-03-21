@@ -93,6 +93,7 @@ protected:
 
 /// @mulle-lldb@ make _param function arguments again >
   bool ParseMulleABIParameters( const DWARFDIE &die,
+                                clang::DeclContext *containing_decl_ctx,
                                 const lldb_private::CompilerType &compiler_type,
                                 std::vector<lldb_private::CompilerType> &function_param_types,
                                 std::vector<clang::ParmVarDecl *> &function_param_decls,
