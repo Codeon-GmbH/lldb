@@ -1,0 +1,20 @@
+extern "C"
+{
+   static const
+   struct mulle_clang_objccompilerinfo
+   {
+      unsigned int   load_version;
+      unsigned int   runtime_version;
+   } __mulle_objc_objccompilerinfo =
+   {
+      14, // load version must match
+      0   // 0 to not emit __load_mulle_objc
+   };
+
+   void   %s( void *$__lldb_obj, unsigned int $__lldb_sel)
+   {
+      extern void   mulle_objc_lldb_check_object( void *$__lldb_obj, unsigned int $__lldb_sel);
+
+      mulle_objc_lldb_check_object( $__lldb_obj, $__lldb_sel);
+   }
+}

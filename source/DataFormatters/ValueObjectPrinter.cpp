@@ -749,6 +749,8 @@ bool ValueObjectPrinter::PrintChildrenOneLiner(bool hide_names) {
   return true;
 }
 
+// @mulle-lldb@  >> rewritten function to not hit DataVisualization::ShouldPrintAsOneLiner
+
 void ValueObjectPrinter::PrintChildrenIfNeeded(bool value_printed,
                                                bool summary_printed) {
   // this flag controls whether we tried to display a description for this
@@ -759,16 +761,35 @@ void ValueObjectPrinter::PrintChildrenIfNeeded(bool value_printed,
   auto curr_ptr_depth = m_ptr_depth;
   bool print_children =
       ShouldPrintChildren(is_failed_description, curr_ptr_depth);
+
+  // DataVisualization::ShouldPrintAsOneLiner often called for
+  // print_oneline (see below) is very expensive, so use an
+  // early exit, if we are not printing children (also easier to read)
+
+  if (!print_children) {
+    if (m_curr_depth >= m_options.m_max_depth && IsAggregate() &&
+               ShouldPrintValueObject()) {
+      m_stream->PutCString("{...}\n");
+    } else
+      m_stream->EOL();
+    return;
+  }
+
+  //
+  // TODO: maybe move the next line to #1#, but its unclear to me if
+  // DataVisualization::ShouldPrintAsOneLiner can modify *m_valobj
+  //
   bool print_oneline =
       (curr_ptr_depth.CanAllowExpansion() || m_options.m_show_types ||
        !m_options.m_allow_oneliner_mode || m_options.m_flat_output ||
        (m_options.m_pointer_as_array) || m_options.m_show_location)
           ? false
           : DataVisualization::ShouldPrintAsOneLiner(*m_valobj);
+
   bool is_instance_ptr = IsInstancePointer();
   uint64_t instance_ptr_value = LLDB_INVALID_ADDRESS;
 
-  if (print_children && is_instance_ptr) {
+  if (is_instance_ptr) {
     instance_ptr_value = m_valobj->GetValueAsUnsigned(0);
     if (m_printed_instance_pointers->count(instance_ptr_value)) {
       // we already printed this instance-is-pointer thing, so don't expand it
@@ -781,19 +802,15 @@ void ValueObjectPrinter::PrintChildrenIfNeeded(bool value_printed,
           instance_ptr_value); // remember this guy for future reference
   }
 
-  if (print_children) {
-    if (print_oneline) {
-      m_stream->PutChar(' ');
-      PrintChildrenOneLiner(false);
-      m_stream->EOL();
-    } else
-      PrintChildren(value_printed, summary_printed, curr_ptr_depth);
-  } else if (m_curr_depth >= m_options.m_max_depth && IsAggregate() &&
-             ShouldPrintValueObject()) {
-    m_stream->PutCString("{...}\n");
-  } else
+  // #1#
+  if (print_oneline) {
+    m_stream->PutChar(' ');
+    PrintChildrenOneLiner(false);
     m_stream->EOL();
+  } else
+    PrintChildren(value_printed, summary_printed, curr_ptr_depth);
 }
+// @mulle-lldb@  << rewritten function to not hit DataVisualization::ShouldPrintAsOneLiner
 
 bool ValueObjectPrinter::ShouldPrintValidation() {
   return m_options.m_run_validator;

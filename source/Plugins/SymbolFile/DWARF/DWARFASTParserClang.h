@@ -91,6 +91,14 @@ protected:
       lldb::AccessType &default_accessibility, bool &is_a_class,
       lldb_private::ClangASTImporter::LayoutInfo &layout_info);
 
+/// @mulle-lldb@ make _param function arguments again >
+  bool ParseMulleABIParameters( const DWARFDIE &die,
+                                const lldb_private::CompilerType &compiler_type,
+                                std::vector<lldb_private::CompilerType> &function_param_types,
+                                std::vector<clang::ParmVarDecl *> &function_param_decls,
+                                clang::StorageClass storage);
+/// @mulle-lldb@ make _param function arguments again <
+
   size_t
   ParseChildParameters(lldb_private::CompileUnit &comp_unit,
                        clang::DeclContext *containing_decl_ctx,

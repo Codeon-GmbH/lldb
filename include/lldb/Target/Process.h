@@ -3132,6 +3132,12 @@ protected:
   std::unique_ptr<UtilityFunction> m_dlopen_utility_func_up;
   std::once_flag m_dlopen_utility_func_flag_once;
 
+// @mulle-lldb@ avoid failed threadplan calling formatters that execute a threadplan again >
+public:
+  bool isThreadPlanLocked( void);
+protected:
+// @mulle-lldb@ avoid failed threadplan calling formatters that execute a threadplan again <
+
   size_t RemoveBreakpointOpcodesFromBuffer(lldb::addr_t addr, size_t size,
                                            uint8_t *buf) const;
 

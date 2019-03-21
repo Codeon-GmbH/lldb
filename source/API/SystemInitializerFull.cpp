@@ -59,6 +59,9 @@
 #include "Plugins/Language/ObjC/ObjCLanguage.h"
 #include "Plugins/Language/ObjCPlusPlus/ObjCPlusPlusLanguage.h"
 #include "Plugins/LanguageRuntime/CPlusPlus/ItaniumABI/ItaniumABILanguageRuntime.h"
+// @mulle-lldb@ Initialize runtime >
+#include "Plugins/LanguageRuntime/ObjC/MulleObjCRuntime/MulleObjCRuntimeV1.h"
+// @mulle-lldb@ Initialize runtime <
 #include "Plugins/LanguageRuntime/ObjC/AppleObjCRuntime/AppleObjCRuntimeV1.h"
 #include "Plugins/LanguageRuntime/ObjC/AppleObjCRuntime/AppleObjCRuntimeV2.h"
 #include "Plugins/LanguageRuntime/RenderScript/RenderScriptRuntime/RenderScriptRuntime.h"
@@ -354,6 +357,10 @@ SystemInitializerFull::Initialize(const InitializerOptions &options) {
   EmulateInstructionPPC64::Initialize();
   SymbolFileDWARFDebugMap::Initialize();
   ItaniumABILanguageRuntime::Initialize();
+  // @mulle-lldb@ Initialize runtime >
+  // initialize ahead of AppleRuntimes, so we get searched first
+  MulleObjCRuntimeV1::Initialize();
+  // @mulle-lldb@ Initialize runtime <
   AppleObjCRuntimeV2::Initialize();
   AppleObjCRuntimeV1::Initialize();
   SystemRuntimeMacOSX::Initialize();

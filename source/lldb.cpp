@@ -46,8 +46,9 @@ const char *lldb_private::GetVersion() {
   // as the clang tool.
   static std::string g_version_str;
   if (g_version_str.empty()) {
-    g_version_str += "lldb version ";
-    g_version_str += CLANG_VERSION_STRING;
+/// @mulle-lldb@ mulle-lldb as version string >    
+    g_version_str += "mulle-lldb version 6.0.0.3";
+/// @mulle-lldb@ mulle-lldb as version string <    
 
     const char *lldb_repo = GetLLDBRepository();
     const char *lldb_rev = GetLLDBRevision();

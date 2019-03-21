@@ -436,8 +436,20 @@ ClangExpressionParser::ClangExpressionParser(ExecutionContextScope *exe_scope,
         m_compiler->getLangOpts().ObjCRuntime.set(ObjCRuntime::MacOSX,
                                                   VersionTuple(10, 7));
       else
-        m_compiler->getLangOpts().ObjCRuntime.set(ObjCRuntime::FragileMacOSX,
-                                                  VersionTuple(10, 7));
+/// @mulle-lldb@ change to Mulle runtime >
+      {
+        m_compiler->getLangOpts().ObjCRuntime.set(ObjCRuntime::Mulle,
+                                                  VersionTuple(0, 12));
+        // tagged pointers are not good for JIT, but I don't know exactly why yet
+        // m_compiler->getLangOpts().ObjCDisableTaggedPointers = true;
+
+        // turning off C++ is not good, because internally lldb assumes it
+        // compiles everything with C++ and then wants really C and puts "extern C"
+        // in front of it
+        // m_compiler->getLangOpts().CPlusPlus = false;
+        // m_compiler->getLangOpts().CPlusPlus11 = false;
+      }
+/// @mulle-lldb@ change to Mulle runtime <
 
       if (process_sp->GetObjCLanguageRuntime()->HasNewLiteralsAndIndexing())
         m_compiler->getLangOpts().DebuggerObjCLiteral = true;

@@ -1,4 +1,4 @@
-//===-- AppleObjCRuntime.h --------------------------------------*- C++ -*-===//
+//===-- MulleObjCRuntime.h --------------------------------------*- C++ -*-===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -7,22 +7,26 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef liblldb_AppleObjCRuntime_h_
-#define liblldb_AppleObjCRuntime_h_
+#ifndef liblldb_MulleObjCRuntime_h_
+#define liblldb_MulleObjCRuntime_h_
 
+// C Includes
+// C++ Includes
+// Other libraries and framework includes
 #include "llvm/ADT/Optional.h"
 
-#include "AppleObjCTrampolineHandler.h"
-#include "AppleThreadPlanStepThroughObjCTrampoline.h"
+// Project includes
+#include "MulleObjCTrampolineHandler.h"
+#include "MulleThreadPlanStepThroughObjCTrampoline.h"
 #include "lldb/Target/LanguageRuntime.h"
 #include "lldb/Target/ObjCLanguageRuntime.h"
 #include "lldb/lldb-private.h"
 
 namespace lldb_private {
 
-class AppleObjCRuntime : public lldb_private::ObjCLanguageRuntime {
+class MulleObjCRuntime : public lldb_private::ObjCLanguageRuntime {
 public:
-  ~AppleObjCRuntime() override;
+  ~MulleObjCRuntime() override;
 
   //------------------------------------------------------------------
   // Static Functions
@@ -33,8 +37,7 @@ public:
 
   static bool classof(const ObjCLanguageRuntime *runtime) {
     switch (runtime->GetRuntimeVersion()) {
-    case ObjCRuntimeVersions::eAppleObjC_V1:
-    case ObjCRuntimeVersions::eAppleObjC_V2:
+    case ObjCRuntimeVersions::eMulleObjC_V1:
       return true;
     default:
       return false;
@@ -72,7 +75,9 @@ public:
 
   // Get the "libobjc.A.dylib" module from the current target if we can find
   // it, also cache it once it is found to ensure quick lookups.
-  lldb::ModuleSP GetObjCModule();
+  lldb::ModuleSP GetMulleObjCRuntimeModule();
+
+  bool IsSymbolARuntimeThunk(const Symbol &symbol) override;
 
   // Sync up with the target
 
@@ -87,29 +92,19 @@ public:
   bool ExceptionBreakpointsExplainStop(lldb::StopInfoSP stop_reason) override;
 
   lldb::SearchFilterSP CreateExceptionSearchFilter() override;
-  
-  static std::tuple<FileSpec, ConstString> GetExceptionThrowLocation();
-
-  lldb::ValueObjectSP GetExceptionObjectForThread(
-      lldb::ThreadSP thread_sp) override;
-
-  lldb::ThreadSP GetBacktraceThreadFromException(
-      lldb::ValueObjectSP thread_sp) override;
 
   uint32_t GetFoundationVersion();
 
   virtual void GetValuesForGlobalCFBooleans(lldb::addr_t &cf_true,
                                             lldb::addr_t &cf_false);
-                                            
-  virtual bool IsTaggedPointer (lldb::addr_t addr) { return false; }
 
 protected:
   // Call CreateInstance instead.
-  AppleObjCRuntime(Process *process);
+  MulleObjCRuntime(Process *process);
 
   bool CalculateHasNewLiteralsAndIndexing() override;
 
-  static bool AppleIsModuleObjCLibrary(const lldb::ModuleSP &module_sp);
+  static bool IsMulleObjCRuntimeModule(const lldb::ModuleSP &module_sp);
 
   static ObjCRuntimeVersions GetObjCVersion(Process *process,
                                             lldb::ModuleSP &objc_module_sp);
@@ -120,7 +115,7 @@ protected:
 
   std::unique_ptr<Address> m_PrintForDebugger_addr;
   bool m_read_objc_library;
-  std::unique_ptr<lldb_private::AppleObjCTrampolineHandler>
+  std::unique_ptr<lldb_private::MulleObjCTrampolineHandler>
       m_objc_trampoline_handler_ap;
   lldb::BreakpointSP m_objc_exception_bp_sp;
   lldb::ModuleWP m_objc_module_wp;
@@ -131,4 +126,4 @@ protected:
 
 } // namespace lldb_private
 
-#endif // liblldb_AppleObjCRuntime_h_
+#endif // liblldb_MulleObjCRuntime_h_

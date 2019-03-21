@@ -9,6 +9,8 @@
 
 #include "lldb/Target/ThreadPlanShouldStopHere.h"
 #include "lldb/Symbol/Symbol.h"
+#include "lldb/Target/LanguageRuntime.h"
+#include "lldb/Target/Thread.h"
 #include "lldb/Target/RegisterContext.h"
 #include "lldb/Target/Thread.h"
 #include "lldb/Utility/Log.h"
@@ -78,6 +80,33 @@ bool ThreadPlanShouldStopHere::DefaultShouldStopHereCallback(
       should_stop_here = false;
     }
   }
+
+  // @mulle-lldb@ code from swift-lldb  >
+  // https://github.com/apple/swift-lldb/blob/stable/source/Target/ThreadPlanShouldStopHere.cpp
+  // (thx to jim ingham)
+  // Check whether the frame we are in is a language runtime thunk, only for
+  // step out (or same parent):
+  if (operation == eFrameCompareOlder || operation == eFrameCompareSameParent) {
+    Symbol *symbol = frame->GetSymbolContext(eSymbolContextSymbol).symbol;
+    if (symbol) {
+      LanguageRuntime *language_runtime;
+      bool is_thunk = false;
+      ProcessSP process_sp(current_plan->GetThread().GetProcess());
+      enum LanguageType languages_to_try[] = {
+          eLanguageTypeObjC, eLanguageTypeSwift, eLanguageTypeC_plus_plus};
+
+      for (enum LanguageType language : languages_to_try) {
+        language_runtime = process_sp->GetLanguageRuntime(language);
+        if (language_runtime)
+          is_thunk = language_runtime->IsSymbolARuntimeThunk(*symbol);
+        if (is_thunk) {
+          should_stop_here = false;
+          break;
+        }
+      }
+    }
+  }
+  // @mulle-lldb@ code from swift-lldb (thx to jim ingham) <
 
   // Always avoid code with line number 0.
   // FIXME: At present the ShouldStop and the StepFromHere calculate this

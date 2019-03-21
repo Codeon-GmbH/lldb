@@ -540,9 +540,9 @@ TypeSP DWARFASTParserClang::ParseTypeFromDWARF(const SymbolContext &sc,
 
         LanguageType class_language = eLanguageTypeUnknown;
         bool is_complete_objc_class = false;
-        size_t calling_convention 
+        size_t calling_convention
                 = llvm::dwarf::CallingConvention::DW_CC_normal;
-        
+
         const size_t num_attributes = die.GetAttributes(attributes);
         if (num_attributes > 0) {
           uint32_t i;
@@ -591,7 +591,7 @@ TypeSP DWARFASTParserClang::ParseTypeFromDWARF(const SymbolContext &sc,
               case DW_AT_calling_convention:
                 calling_convention = form_value.Unsigned();
                 break;
-                
+
               case DW_AT_allocated:
               case DW_AT_associated:
               case DW_AT_data_location:
@@ -655,9 +655,11 @@ TypeSP DWARFASTParserClang::ParseTypeFromDWARF(const SymbolContext &sc,
           default_accessibility = eAccessPrivate;
         }
 
+// @mulle-lldb@ DWARF also check for is_complete_objc_class to fix p *expr bug >
         if (byte_size_valid && byte_size == 0 && type_name_cstr &&
-            !die.HasChildren() &&
+            die.HasChildren() == false && ! is_complete_objc_class &&  // (mulle-lldb) is_complete_objc_class added
             sc.comp_unit->GetLanguage() == eLanguageTypeObjC) {
+// @mulle-lldb@ DWARF also check for is_complete_objc_class to fix p *expr bug <
           // Work around an issue with clang at the moment where forward
           // declarations for objective C classes are emitted as:
           //  DW_TAG_structure_type [2]
@@ -818,7 +820,7 @@ TypeSP DWARFASTParserClang::ParseTypeFromDWARF(const SymbolContext &sc,
                 }
                 return TypeSP();
               }
-                
+
               clang::ClassTemplateSpecializationDecl
                   *class_specialization_decl =
                       m_ast.CreateClassTemplateSpecializationDecl(
@@ -840,7 +842,7 @@ TypeSP DWARFASTParserClang::ParseTypeFromDWARF(const SymbolContext &sc,
                                                 class_language, &metadata);
           }
         }
-        
+
         // Store a forward declaration to this class type in case any
         // parameters in any class methods need it for the clang types for
         // function prototypes.
@@ -949,7 +951,7 @@ TypeSP DWARFASTParserClang::ParseTypeFromDWARF(const SymbolContext &sc,
             m_ast.SetHasExternalStorage(clang_type.GetOpaqueQualType(), true);
           }
         }
-        
+
         // If we made a clang type, set the trivial abi if applicable: We only
         // do this for pass by value - which implies the Trivial ABI. There
         // isn't a way to assert that something that would normally be pass by
@@ -1350,7 +1352,11 @@ TypeSP DWARFASTParserClang::ParseTypeFromDWARF(const SymbolContext &sc,
 
                 clang::ObjCMethodDecl *objc_method_decl =
                     m_ast.AddMethodToObjCObjectType(
-                        class_opaque_type, type_name_cstr, clang_type,
+                        class_opaque_type, type_name_cstr,
+/// @mulle-objc@ add this for parameter names >
+                        function_param_decls,
+/// @mulle-objc@ add this for parameter names <
+                        clang_type,
                         accessibility, is_artificial, is_variadic);
                 type_handled = objc_method_decl != NULL;
                 if (type_handled) {
@@ -1627,7 +1633,7 @@ TypeSP DWARFASTParserClang::ParseTypeFromDWARF(const SymbolContext &sc,
                 m_ast.CreateFunctionTemplateSpecializationInfo(
                     function_decl, func_template_decl, template_param_infos);
               }
-              
+
               lldbassert(function_decl);
 
               if (function_decl) {
@@ -3312,6 +3318,72 @@ bool DWARFASTParserClang::ParseChildMembers(
   return true;
 }
 
+/// @mulle-lldb@ make _param function arguments again >
+/*
+ <2><64>: Abbrev Number: 4 (DW_TAG_formal_parameter)
+    <65>   DW_AT_location    : 2 byte block: 91 68      (DW_OP_fbreg: -24)
+    <68>   DW_AT_name        : (indirect string, offset: 0x9c): _param
+    <6c>   DW_AT_type        : <0x84> ***reference to DW_TAG_pointer_type***
+    <70>   DW_AT_artificial  : 1
+ <1><84>: Abbrev Number: 5 (DW_TAG_pointer_type)
+    <85>   DW_AT_type        : <0x89>
+ <1><89>: Abbrev Number: 8 (DW_TAG_structure_type)
+    <8a>   DW_AT_name        : (indirect string, offset: 0xb6): p.a:b:
+    <8e>   DW_AT_byte_size   : 16
+    <8f>   DW_AT_decl_file   : 1
+    <90>   DW_AT_decl_line   : 9
+ <2><91>: Abbrev Number: 9 (DW_TAG_member)
+    <92>   DW_AT_name        : (indirect string, offset: 0xa3): a
+    <96>   DW_AT_type        : <0xaa>
+    <9a>   DW_AT_decl_file   : 1
+    <9b>   DW_AT_decl_line   : 9
+    <9c>   DW_AT_data_member_location: 0
+*/
+
+bool DWARFASTParserClang::ParseMulleABIParameters( const DWARFDIE &die,
+  const CompilerType &compiler_type,
+  std::vector<lldb_private::CompilerType> &function_param_types,
+  std::vector<clang::ParmVarDecl *> &function_param_decls,
+  clang::StorageClass storage)
+{
+  if( ! compiler_type.IsPointerType())
+    return( false);
+
+  CompilerType  paramType;
+
+  paramType = compiler_type.GetPointeeType();
+  if( ! paramType.IsAggregateType())
+    return( false);
+
+  uint32_t      i, n;
+  CompilerType  fieldType;
+  std::string   name;
+  uint64_t      bit_offset_ptr;
+  uint32_t      bitfield_bit_size_ptr;
+  bool          is_bitfield_ptr;
+
+  n = paramType.GetNumFields();
+  for( i = 0; i < n; i++)
+  {
+    fieldType = paramType.GetFieldAtIndex( i,
+                                           name,
+                                           &bit_offset_ptr,
+                                           &bitfield_bit_size_ptr,
+                                           &is_bitfield_ptr);
+    function_param_types.push_back( fieldType);
+
+    clang::ParmVarDecl *param_var_decl =
+        m_ast.CreateParameterDeclaration(
+            name.c_str(), fieldType, storage);
+    assert(param_var_decl);
+    function_param_decls.push_back(param_var_decl);
+
+    m_ast.SetMetadataAsUserID(param_var_decl, die.GetID());
+  }
+  return( true);
+}
+/// @mulle-lldb@ make _param function arguments again <
+
 size_t DWARFASTParserClang::ParseChildParameters(
     CompileUnit &comp_unit, clang::DeclContext *containing_decl_ctx,
     const DWARFDIE &parent_die, bool skip_artificial, bool &is_static,
@@ -3321,6 +3393,8 @@ size_t DWARFASTParserClang::ParseChildParameters(
     unsigned &type_quals) {
   if (!parent_die)
     return 0;
+
+  bool skipRemainingParameters = false;
 
   size_t arg_idx = 0;
   for (DWARFDIE die = parent_die.GetFirstChild(); die.IsValid();
@@ -3379,7 +3453,8 @@ size_t DWARFASTParserClang::ParseChildParameters(
           }
         }
 
-        bool skip = false;
+        bool skip = skipRemainingParameters;
+
         if (skip_artificial && is_artificial) {
           // In order to determine if a C++ member function is "const" we
           // have to look at the const-ness of "this"...
@@ -3399,6 +3474,25 @@ size_t DWARFASTParserClang::ParseChildParameters(
                   type_quals |= clang::Qualifiers::Const;
                 if (encoding_mask & (1u << Type::eEncodingIsVolatileUID))
                   type_quals |= clang::Qualifiers::Volatile;
+
+              }
+            }
+            skip = true;
+          } else {
+
+            // HACK: Objective C formal parameters "self" and "_cmd"
+            // are not marked as artificial in the DWARF...
+            CompileUnit *comp_unit = die.GetLLDBCompileUnit();
+            if (comp_unit) {
+              switch (comp_unit->GetLanguage()) {
+              case eLanguageTypeObjC:
+              case eLanguageTypeObjC_plus_plus:
+                if (name && name[0] &&
+                    (strcmp(name, "self") == 0 || strcmp(name, "_cmd") == 0))
+                  skip = true;
+                break;
+              default:
+                break;
               }
             }
           }
@@ -3420,6 +3514,31 @@ size_t DWARFASTParserClang::ParseChildParameters(
             m_ast.SetMetadataAsUserID(param_var_decl, die.GetID());
           }
         }
+
+        /// @mulle-lldb@ make _param function arguments again >
+        if( skip && arg_idx == 2 && name && ! strcmp( name, "_param"))
+        {
+          CompileUnit *comp_unit = die.GetLLDBCompileUnit();
+          if (comp_unit) {
+            switch (comp_unit->GetLanguage()) {
+            default:
+              break;
+            case eLanguageTypeObjC:
+            case eLanguageTypeObjC_plus_plus:
+              Type *type = die.ResolveTypeUID(DIERef(param_type_die_form));
+              if (type) {
+                  ParseMulleABIParameters( die,
+                                           type->GetForwardCompilerType(),
+                                           function_param_types,
+                                           function_param_decls,
+                                           storage);
+                  skipRemainingParameters = true;
+              }
+              break;
+            }
+          }
+        }
+        /// @mulle-lldb@ make _param function arguments again <
       }
       arg_idx++;
     } break;
