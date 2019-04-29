@@ -287,7 +287,7 @@ static const struct   mulle_clang_objccompilerinfo\n\
   unsigned int   runtime_version;\n\
 } __mulle_objc_objccompilerinfo =\n\
 {\n\
-  14, // load version must match \n\
+  15, // @mulle-objc@ load version must match \n\
   0   // 0 to not emit __load_mulle_objc\n\
 };\n\
 ");

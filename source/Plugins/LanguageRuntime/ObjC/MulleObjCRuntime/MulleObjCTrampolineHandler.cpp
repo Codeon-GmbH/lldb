@@ -628,15 +628,15 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
       int_value.GetScalar() = 1;
    else
       if( this_dispatch.has_class_argument)
-         int_value.GetScalar() = 2;  // FIXME - Set to 0 when debugging is done.
+         int_value.GetScalar() = 2;
       else
-         int_value.GetScalar() = 0;  // FIXME - Set to 0 when debugging is done.
+         int_value.GetScalar() = 0;
    dispatch_values.PushValue(int_value);
 
    if (log && log->GetVerbose())
       int_value.GetScalar() = 1;
    else
-      int_value.GetScalar() = 0;  // FIXME - Set to 0 when debugging is done.
+      int_value.GetScalar() = 0;  
    dispatch_values.PushValue( int_value);
 
    // The step through code might have to fill in the cache, so it is not safe to run only one thread.

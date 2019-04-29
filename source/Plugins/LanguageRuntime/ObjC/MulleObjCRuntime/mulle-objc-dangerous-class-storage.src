@@ -3,12 +3,12 @@ extern "C"
    static const
    struct mulle_clang_objccompilerinfo
    {
-   unsigned int   load_version;
-   unsigned int   runtime_version;
+      unsigned int   load_version;
+      unsigned int   runtime_version;
    } __mulle_objc_objccompilerinfo =
    {
-   14, // load version must match
-   0   // 0 to not emit __load_mulle_objc
+      15, // @mulle-objc@ load version must match
+      0   // 0 to not emit __load_mulle_objc
    };
 
 
