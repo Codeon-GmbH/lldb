@@ -1,0 +1,221 @@
+#!/usr/bin/env bash
+
+[ "${TRACE}" = "YES" ] && set -x && : "$0" "$@"
+
+OLD_LLVM_BRANCH="release_80"
+OLD_MULLE_DEV_BRANCH="mulle_lldb_80"   # mulle_objclang_80 for clang
+NEW_LLVM_BRANCH="release_90"
+NEW_MULLE_DEV_BRANCH="mulle_lldb_90"   # mulle_objclang_90 for clang
+
+LLVM_PROJECT="lldb"                    # clang for clang
+SOURCEDIRS="include/ source/"          # include/ lib/ for clang
+
+# usually don't edit these
+
+LLVM_REMOTE="llvm"
+BEFOREFILE=.before-markers.txt
+AFTERFILE=.after-markers.txt
+
+
+#
+# the rest should be identical in mulle-clang/mulle-lldb
+# If you edit them edit the corresponding file too
+#
+
+####### >-> DONT EDIT >->
+
+migrate()
+{
+   echo "### 1: Sanity Checks" >&2 &&
+
+   if ! git rev-parse --verify "${OLD_MULLE_DEV_BRANCH}" > /dev/null 2>&1
+   then
+      echo "Branch ${OLD_MULLE_DEV_BRANCH} must exist" >&2 && exit 1
+   fi
+
+
+   if git rev-parse --verify "${NEW_MULLE_DEV_BRANCH}" > /dev/null 2>&1
+   then
+      echo "Branch ${NEW_MULLE_DEV_BRANCH} must not exist yet" >&2 && exit 1
+   fi
+
+   #
+   # remove garbage tmp if present
+   #
+   if git rev-parse --verify "tmp_${NEW_MULLE_DEV_BRANCH}" > /dev/null 2>&1
+   then
+      git branch -D "tmp_${NEW_MULLE_DEV_BRANCH}" || exit 1
+   fi
+
+   #
+   # remove garbage tag if present
+   #
+   if git rev-parse --verify "squashed_${OLD_MULLE_DEV_BRANCH}" > /dev/null 2>&1
+   then
+      git tag -d "squashed_${OLD_MULLE_DEV_BRANCH}" || exit 1
+   fi
+
+   echo "### 2: Fetch LLVM changes" >&2 &&
+
+   #
+   # get new version from LLVM (github)
+   #
+   if ! git ls-remote --exit-code llvm > /dev/null
+   then
+      git remote add "${LLVM_REMOTE}" "https://github.com/llvm-mirror/${LLVM_PROJECT}.git" 2> /dev/null
+   fi
+   git fetch "${LLVM_REMOTE}" || exit 1
+
+   if ! git rev-parse --verify "${LLVM_REMOTE}/${OLD_LLVM_BRANCH}"  > /dev/null 2>&1
+   then
+      echo "Branch ${LLVM_REMOTE}/${OLD_LLVM_BRANCH} must exist" >&2 && exit 1
+   fi
+
+
+   # find the place we forked from last time
+   ancestor="`git merge-base "${LLVM_REMOTE}/${OLD_LLVM_BRANCH}" "${OLD_MULLE_DEV_BRANCH}"`"
+   [ -z "${ancestor}" ] && echo "No common ancestor found" >&2 && exit 1
+
+   # create a new temporary branch to contain squashed patchset
+   echo "### 3: Checkout" >&2 &&
+
+   git checkout -b "tmp_${NEW_MULLE_DEV_BRANCH}" "${ancestor}" || exit 1
+
+   #
+   # squash everything into new branch
+   # this helps weed out re-edits and commits that weren't useful
+   # easing the conflict resolution
+   #
+   # ???? git merge --squash "tmp_${OLD_MULLE_DEV_BRANCH}"
+   echo "### 4: Squash Merge" >&2
+
+   git merge --squash "${OLD_MULLE_DEV_BRANCH}" || exit 1
+
+   echo "### 5: Add changed script files" >&2
+
+   if [ -e "${TMPDIR:-/tmp}/install-mulle-clang" ]
+   then
+      cp "${TMPDIR:-/tmp}/install-mulle-clang" "bin/" || exit 1
+      chmod 755 "bin/install-mulle-clang"
+      git add "bin/install-mulle-clang"
+   fi
+
+   cp "${TMPDIR:-/tmp}/migrate-to-next-release" "bin/" || exit 1
+   chmod 755 "bin/migrate-to-next-release"
+   git add "bin/migrate-to-next-release"
+
+   #
+   # There shouldn't be any problem until here. If there is a failure, before
+   # this, you may run into a problem with scripts not being in /tmp
+   #
+
+   # commit stuff
+   echo "### 6: Commit" >&2
+
+   git commit -m "${OLD_MULLE_DEV_BRANCH} squashed + new version numbers" || exit 1
+
+   #
+   # remember until where did we squash the old branch (in case of
+   # future edits)
+   echo "### 7: Tag" >&2
+
+   git tag "squashed_${OLD_MULLE_DEV_BRANCH}" "${OLD_MULLE_DEV_BRANCH}" || exit 1
+
+   # count our change marker texts
+   grep -R '@mulle-' ${SOURCEDIRS} > "${BEFOREFILE}" || exit 1
+
+   #
+   # Now get the new stuff
+   #
+   echo "### 8: Checkout" >&2
+
+   git checkout -b "${NEW_MULLE_DEV_BRANCH}" "${LLVM_REMOTE}/${NEW_LLVM_BRANCH}" || exit 1
+
+
+   echo "### 9: Cherry pick" >&2
+
+   if ! git cherry-pick "tmp_${NEW_MULLE_DEV_BRANCH}"
+   then
+      git status -s
+      exit 1
+   fi
+}
+
+
+cleanup()
+{
+   # count our change marker texts again
+   grep -R '@mulle-' ${SOURCEDIRS} > "${AFTERFILE}" || exit 1
+
+   local before
+   local after
+
+   before="`cat "${BEFOREFILE}" `"
+   after="`cat "${AFTERFILE}" `"
+
+   if [ "${before}" != "${after}" ]
+   then
+      echo "Some @mulle- tags got lost in the merge" >&2
+      echo "before : ${BEFOREFILE}" >&2
+      echo "after  : ${AFTERFILE}" >&2
+      diff "${BEFOREFILE}" "${AFTERFILE}" >&2
+      exit 1
+   fi
+
+   #
+   # resolve conflicts manually.
+   # Check with grep '@mulle-objc' ... | wc -l, that all changes are present
+   #
+   echo "### 10: Tmp branch delete" >&2
+
+   git branch -D "tmp_${NEW_MULLE_DEV_BRANCH}" || exit 1
+   rm "${AFTERFILE}" "${BEFOREFILE}"
+}
+
+
+####### <-< DONT EDIT <-<
+
+#
+#
+# Since an old version of this script gets will get checked out over the new
+# One we copy script to /tmp and exec there
+#
+if [ "${LLVM_PROJECT}" == "lldb" ]
+then
+   [ ! -e "MULLE_LLDB_VERSION" ] && echo "cd to the root of mulle-lldb" >&2 && exit 1
+else
+   [ ! -e "BUILD_MULLE_CLANG.md" ] && echo "cd to the root of mulle-clang" >&2 && exit 1
+fi
+
+case "$0" in
+   "${TMPDIR:-/tmp}"*)
+   ;;
+
+   *)
+      echo "### 0: Executing script \"$0\" from tmp" >&2
+
+      if  [ -e "bin/install-mulle-clang" ]
+      then
+         cp "bin/migrate-to-next-release" "${TMPDIR:-/tmp}" || exit 1
+      fi
+      cp "bin/migrate-to-next-release" "${TMPDIR:-/tmp}" || exit 1
+      chmod 755 "${TMPDIR:-/tmp}/migrate-to-next-release" || exit 1
+      exec "${TMPDIR:-/tmp}/migrate-to-next-release" "$@"
+   ;;
+esac
+
+case "$1" in
+   'continue'|'cleanup')
+      cleanup
+   ;;
+
+   *)
+      if [ ! -f "${AFTERFILE}" ]
+      then
+         migrate
+      fi
+      cleanup
+   ;;
+esac
+
+migrate
