@@ -212,8 +212,8 @@ MulleObjCTrampolineHandler::SetupDispatchFunction(Thread &thread,
 
     // First stage is to make the ClangUtility to hold our injected function:
 
-    if (!m_impl_code.get()) {
-      if (m_lookup_implementation_function_code != NULL) {
+    if (!m_impl_code) {
+      if (m_lookup_implementation_function_code != nullptr) {
         Status error;
         m_impl_code.reset(exe_ctx.GetTargetRef().GetUtilityFunctionForLanguage(
             m_lookup_implementation_function_code, eLanguageTypeObjC,
@@ -265,11 +265,11 @@ MulleObjCTrampolineHandler::SetupDispatchFunction(Thread &thread,
 
   diagnostics.Clear();
 
-  // Now write down the argument values for this particular call.  This looks
-  // like it might be a race condition
-  // if other threads were calling into here, but actually it isn't because we
-  // allocate a new args structure for
-  // this call by passing args_addr = LLDB_INVALID_ADDRESS...
+  // Now write down the argument values for this particular call.
+  // This looks like it might be a race condition if other threads
+  // were calling into here, but actually it isn't because we allocate
+  // a new args structure for this call by passing args_addr =
+  // LLDB_INVALID_ADDRESS...
 
   if (!impl_function_caller->WriteFunctionArguments(
           exe_ctx, args_addr, dispatch_values, diagnostics)) {
