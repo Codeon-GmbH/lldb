@@ -55,8 +55,8 @@ MulleThreadPlanStepThroughObjCTrampoline::
 
 void MulleThreadPlanStepThroughObjCTrampoline::DidPush() {
   // Setting up the memory space for the called function text might require
-  // allocations,
-  // i.e. a nested function call.  This needs to be done as a PreResumeAction.
+  // allocations, i.e. a nested function call.  This needs to be done as a
+  // PreResumeAction.
   m_thread.GetProcess()->AddPreResumeAction(PreResumeInitializeFunctionCaller,
                                             (void *)this);
 }
@@ -158,8 +158,7 @@ bool MulleThreadPlanStepThroughObjCTrampoline::ShouldStop(Event *event_ptr) {
   }
 
   // Second stage, if all went well with the function calling, then fetch the
-  // target address, and
-  // queue up a "run to that address" plan.
+  // target address, and queue up a "run to that address" plan.
   if (!m_run_to_sp) {
     Value target_addr_value;
     ExecutionContext exc_ctx;
@@ -192,7 +191,8 @@ bool MulleThreadPlanStepThroughObjCTrampoline::ShouldStop(Event *event_ptr) {
       m_run_to_sp = m_thread.QueueThreadPlanForStepOutNoShouldStop(
           abort_other_plans, &sc, first_insn, m_stop_others, eVoteNoOpinion,
           eVoteNoOpinion, frame_idx, status);
-      m_run_to_sp->SetPrivate(true);
+      if (m_run_to_sp && status.Success())
+        m_run_to_sp->SetPrivate(true);
       return false;
     }
 
@@ -214,8 +214,8 @@ bool MulleThreadPlanStepThroughObjCTrampoline::ShouldStop(Event *event_ptr) {
     }
     // Extract the target address from the value:
 
-    m_run_to_sp.reset(
-        new ThreadPlanRunToAddress(m_thread, target_so_addr, m_stop_others));
+    m_run_to_sp = std::make_shared<ThreadPlanRunToAddress>(
+        m_thread, target_so_addr, m_stop_others);
     m_thread.QueueThreadPlan(m_run_to_sp, false);
     m_run_to_sp->SetPrivate(true);
     return false;

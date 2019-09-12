@@ -3137,7 +3137,10 @@ size_t DWARFASTParserClang::ParseChildParameters(
   if (!parent_die)
     return 0;
 
+/// @mulle-lldb@ make _param function arguments again >
   bool skipRemainingParameters = false;
+  bool skip;
+/// @mulle-lldb@ make _param function arguments again <
 
   size_t arg_idx = 0;
   for (DWARFDIE die = parent_die.GetFirstChild(); die.IsValid();
@@ -3185,7 +3188,7 @@ size_t DWARFASTParserClang::ParseChildParameters(
           }
         }
 
-        bool skip = skipRemainingParameters;
+        skip = skipRemainingParameters;
         LanguageType cu_language = die.GetLanguage();
 
         if (skip_artificial && is_artificial) {
@@ -3224,8 +3227,7 @@ size_t DWARFASTParserClang::ParseChildParameters(
                   skip = true;
             }
           }
-          /// @mulle-lldb@ make _param function arguments again <
-          skip = true;
+            /// @mulle-lldb@ make _param function arguments again <
         }
 
         if (!skip) {
