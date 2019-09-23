@@ -395,7 +395,7 @@ bool MulleObjCRuntime::ReadObjCLibrary(const ModuleSP &module_sp) {
   // current module, then we don't have to reread it?
   m_objc_trampoline_handler_ap.reset(
       new MulleObjCTrampolineHandler(m_process->shared_from_this(), module_sp));
-  if (m_objc_trampoline_handler_ap.get() != NULL && m_objc_trampoline_handler_ap.get()->CanStepThrough()) {
+  if (m_objc_trampoline_handler_ap  != nullptr && m_objc_trampoline_handler_ap->CanStepThrough()) {
     m_read_objc_library = true;
      // fprintf( stderr, "ReadObjCLibrary succeeds\n");
     return true;
@@ -408,11 +408,19 @@ bool MulleObjCRuntime::ReadObjCLibrary(const ModuleSP &module_sp) {
 
 ThreadPlanSP MulleObjCRuntime::GetStepThroughTrampolinePlan(Thread &thread,
                                                             bool stop_others) {
-  ThreadPlanSP thread_plan_sp;
+  ThreadPlanSP thread_plan_sp = nullptr;
 
-  if (m_objc_trampoline_handler_ap.get())
+  Log *log(lldb_private::GetLogIfAllCategoriesSet(MULLE_LOG));
+
+  if (m_objc_trampoline_handler_ap)
+  {
     thread_plan_sp = m_objc_trampoline_handler_ap->GetStepThroughDispatchPlan(
         thread, stop_others);
+  }
+
+  if( log)
+    log->Printf( "ThreadPlan is %sset", thread_plan_sp ? "" : "not ");
+
   return thread_plan_sp;
 }
 
@@ -439,6 +447,7 @@ MulleObjCRuntime::GetObjCVersion(Process *process, ModuleSP &objc_module_sp) {
      if ( // module_sp->IsLoadedInTarget(&target) &&
         IsMulleObjCRuntimeModule(module_sp)
         ) {
+      objc_module_sp = module_sp;
       return ObjCRuntimeVersions::eMulleObjC_V1;
     }
   }

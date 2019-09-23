@@ -3189,7 +3189,6 @@ size_t DWARFASTParserClang::ParseChildParameters(
         }
 
         skip = skipRemainingParameters;
-        LanguageType cu_language = die.GetLanguage();
 
         if (skip_artificial && is_artificial) {
           // In order to determine if a C++ member function is "const" we
@@ -3211,23 +3210,38 @@ size_t DWARFASTParserClang::ParseChildParameters(
                   type_quals |= clang::Qualifiers::Const;
                 if (encoding_mask & (1u << Type::eEncodingIsVolatileUID))
                   type_quals |= clang::Qualifiers::Volatile;
-
+                skip = true;
               }
             }
-            skip = true;
-          } else {
+          }
 
-            /// @mulle-lldb@ make _param function arguments again >
-            // HACK: Objective C formal parameters "self" and "_cmd"
-            // are not marked as artificial in the DWARF...
+          LanguageType cu_language = die.GetLanguage();
+          // if artificial and ObjC skip this always
+          if (cu_language == eLanguageTypeObjC ||
+              cu_language == eLanguageTypeObjC_plus_plus)
+          {
+            skip = true;
+          }
+          /// @mulle-lldb@ make _param function arguments again >
+          // _param is now also artificial
+          if( arg_idx == 2 && name && strcmp( name, "_param") == 0)
+          {
             if (cu_language == eLanguageTypeObjC ||
-                cu_language == eLanguageTypeObjC_plus_plus) {
-                if (name && name[0] &&
-                    (strcmp(name, "self") == 0 || strcmp(name, "_cmd") == 0))
-                  skip = true;
+              cu_language == eLanguageTypeObjC_plus_plus) {
+              Type *type = die.ResolveTypeUID(param_type_die_form.Reference());
+              if (type) {
+                  ParseMulleABIParameters( die,
+                                          containing_decl_ctx,
+                                          type->GetForwardCompilerType(),
+                                          function_param_types,
+                                          function_param_decls,
+                                          storage);
+                  skipRemainingParameters = true;
+                  break;
+              }
             }
           }
-            /// @mulle-lldb@ make _param function arguments again <
+          /// @mulle-lldb@ make _param function arguments again <
         }
 
         if (!skip) {
@@ -3245,26 +3259,6 @@ size_t DWARFASTParserClang::ParseChildParameters(
             m_ast.SetMetadataAsUserID(param_var_decl, die.GetID());
           }
         }
-
-        /// @mulle-lldb@ make _param function arguments again >
-        if( skip && arg_idx == 2 && name && ! strcmp( name, "_param"))
-        {
-          if (cu_language == eLanguageTypeObjC ||
-              cu_language == eLanguageTypeObjC_plus_plus) {
-            Type *type = die.ResolveTypeUID(param_type_die_form.Reference());
-            if (type) {
-                ParseMulleABIParameters( die,
-                                         containing_decl_ctx,
-                                         type->GetForwardCompilerType(),
-                                         function_param_types,
-                                         function_param_decls,
-                                         storage);
-                skipRemainingParameters = true;
-            }
-            break;
-          }
-        }
-        /// @mulle-lldb@ make _param function arguments again <
       }
       arg_idx++;
     } break;

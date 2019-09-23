@@ -19,22 +19,30 @@ extern "C"
    // I still use this wrapping function in lldb, because I am too lazy
    // to figure out how to do this correctly (and you are probabaly too :P)
    //
+   struct mulle_objc_lldb_lookup_implementation_args
+   {
+      void   *class_or_superid;
+      int    calltype;
+      int    debug;
+   };
+
    void   *__lldb_objc_find_implementation_for_selector( void *object,
                                                          uint32_t methodid,
-                                                         void *cls_or_superid,
-                                                         int is_superid,
+                                                         void   *class_or_superid,
+                                                         int calltype,
                                                          int debug)
    {
       extern void   *mulle_objc_lldb_lookup_implementation( void *obj,
                                                             uint32_t methodid,
-                                                            void *cls_or_superid,
-                                                            int is_superid,
-                                                            int debug);
+                                                            struct mulle_objc_lldb_lookup_implementation_args *args);
+      struct mulle_objc_lldb_lookup_implementation_args   args;
+
+      args.class_or_superid = class_or_superid;
+      args.calltype         = calltype;
+      args.debug            = debug;
 
       return( mulle_objc_lldb_lookup_implementation( object,
                                                      methodid,
-                                                     cls_or_superid,
-                                                     is_superid,
-                                                     debug));
+                                                     &args));
    }
 }

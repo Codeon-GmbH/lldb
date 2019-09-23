@@ -73,7 +73,7 @@ private:
   const char *m_lookup_implementation_function_code;
   std::unique_ptr<UtilityFunction> m_impl_code;
   std::mutex m_impl_function_mutex;
-  lldb::addr_t m_classlookup_addr[ 4];
+  lldb::addr_t m_classlookup_addr[ 13];
   lldb::addr_t m_impl_fn_addr;
   lldb::addr_t m_msg_forward_addr; // this is the function to "get" the forward method from the class
 

@@ -102,13 +102,14 @@ lldb::addr_t  MulleObjCTrampolineHandler::LookupFunctionSymbol( const lldb::Proc
    const Symbol *msgSend_symbol =
       m_objc_module_sp->FindFirstSymbolWithNameAndType(name_const_str,
                                                     eSymbolTypeCode);
+   Target *target = process_sp ? &process_sp->GetTarget() : NULL;
+
    if (msgSend_symbol && msgSend_symbol->ValueIsAddress()) {
       // FixMe: Make g_dispatch_functions static table of DispatchFunctions, and
       // have the map be address->index.
       // Problem is we also need to lookup the dispatch function.  For now we
       // could have a side table of stret & non-stret
       // dispatch functions.  If that's as complex as it gets, we're fine.
-      Target *target = process_sp ? &process_sp->GetTarget() : NULL;
 
       lldb::addr_t sym_addr =
       msgSend_symbol->GetAddressRef().GetOpcodeLoadAddress(target);
@@ -116,16 +117,36 @@ lldb::addr_t  MulleObjCTrampolineHandler::LookupFunctionSymbol( const lldb::Proc
    }
    else
    {
-      // why not log ?
-      if (process_sp->CanJIT()) {
-         process_sp->GetTarget().GetDebugger().GetErrorFile()->Printf(
-                                                                      "Could not find implementation for function \"%s\"\n",
-                                                                      name_const_str.AsCString());
+      Log *log(lldb_private::GetLogIfAllCategoriesSet(MULLE_LOG));
+
+      if( log)
+        log->Printf("Could not find implementation for function \"%s\"\n",
+                                                        name_const_str.AsCString());
+      if(  target) {
+         target->GetDebugger().GetErrorFile()->Printf( "Could not find implementation for function \"%s\"\n",
+                                                        name_const_str.AsCString());
       }
+
    }
    return( LLDB_INVALID_ADDRESS);
 }
 
+static const char   *lookup_functions[ 13] =
+{
+  "__mulle_objc_universe_lookup_infraclass_nocache_nofast",
+  "_mulle_objc_universe_inlinelookup_infraclass",
+  "_mulle_objc_universe_inlinelookup_infraclass_nofail",
+  "_mulle_objc_universe_lookup_infraclass_nocache_nofail_nofast",
+  "_mulle_objc_universe_lookup_infraclass_nocache_nofast",
+  "_mulle_objc_universe_lookup_infraclass_nofail_nofast",
+  "mulle_objc_global_inlinelookup_infraclass_nofail",
+  "mulle_objc_global_inlinelookup_infraclass_nofail_nofast",
+  "mulle_objc_global_lookup_infraclass_nofail",
+  "mulle_objc_global_lookup_infraclass_nofail_nofast",
+  "mulle_objc_object_inlinelookup_infraclass_nofail",
+  "mulle_objc_object_lookup_infraclass_nofail",
+  "mulle_objc_object_lookup_infraclass_nofail_nofast"
+};
 
 MulleObjCTrampolineHandler::MulleObjCTrampolineHandler(
     const ProcessSP &process_sp, const ModuleSP &objc_module_sp)
@@ -137,44 +158,6 @@ MulleObjCTrampolineHandler::MulleObjCTrampolineHandler(
     m_process_wp = process_sp;
   // Look up the known resolution functions:
 
-  ConstString get_impl_name( "mulle_objc_lldb_lookup_implementation");
-  ConstString msg_forward_name("__forward_mulle_objc_object_call");
-
-  Target *target = process_sp ? &process_sp->GetTarget() : NULL;
-  const Symbol *class_getMethodImplementation =
-      m_objc_module_sp->FindFirstSymbolWithNameAndType(get_impl_name,
-                                                       eSymbolTypeCode);
-  const Symbol *msg_forward = m_objc_module_sp->FindFirstSymbolWithNameAndType(
-      msg_forward_name, eSymbolTypeCode);
-
-  if (class_getMethodImplementation)
-    m_impl_fn_addr =
-        class_getMethodImplementation->GetAddress().GetOpcodeLoadAddress(
-            target);
-  if (msg_forward)
-    m_msg_forward_addr = msg_forward->GetAddress().GetOpcodeLoadAddress(target);
-
-  // FIXME: Do some kind of logging here.
-  if (m_impl_fn_addr == LLDB_INVALID_ADDRESS) {
-    // If we can't even find the ordinary get method implementation function,
-    // then we aren't going to be able to
-    // step through any method dispatches.  Warn to that effect and get out of
-    // here.
-    if (process_sp->CanJIT()) {
-      process_sp->GetTarget().GetDebugger().GetErrorFile()->Printf(
-          "Could not find implementation lookup function \"%s\""
-          " in \"%s\" (%s)"
-          " stepping through ObjC method dispatch will not work.\n",
-          get_impl_name.AsCString(),
-          m_objc_module_sp->GetFileSpec().GetCString(),
-          class_getMethodImplementation ? "process failure" : "symbol not found");
-    }
-    return;
-  } else  {
-    m_lookup_implementation_function_code =
-        g_lookup_implementation_function_code;
-  }
-
   lldb::addr_t sym_addr;
 
   for (size_t i = 0; i != llvm::array_lengthof(g_dispatch_functions); i++) {
@@ -184,14 +167,57 @@ MulleObjCTrampolineHandler::MulleObjCTrampolineHandler(
         m_msgSend_map.insert(std::pair<lldb::addr_t, int>(sym_addr, i));
   }
 
-  m_classlookup_addr[ 0] = LookupFunctionSymbol( process_sp,
-                                                 "mulle_objc_global_lookup_infraclass_nofail");
-  m_classlookup_addr[ 1] = LookupFunctionSymbol( process_sp,
-                                                 "mulle_objc_global_lookup_infraclass_nofail_nofast");
-  m_classlookup_addr[ 2] = LookupFunctionSymbol( process_sp,
-                                                 "mulle_objc_object_lookup_infraclass_nofail");
-  m_classlookup_addr[ 3] = LookupFunctionSymbol( process_sp,
-                                                 "mulle_objc_object_lookup_infraclass_nofail_nofast");
+  for (size_t i = 0; i != llvm::array_lengthof(m_classlookup_addr); i++) {
+    m_classlookup_addr[ i] = LookupFunctionSymbol( process_sp, lookup_functions[ i]);
+  }
+
+  ConstString get_impl_name( "mulle_objc_lldb_lookup_implementation");
+  Target *target = process_sp ? &process_sp->GetTarget() : NULL;
+
+  const Symbol *class_getMethodImplementation =
+      m_objc_module_sp->FindFirstSymbolWithNameAndType(get_impl_name,
+                                                       eSymbolTypeCode);
+  if (class_getMethodImplementation)
+    m_impl_fn_addr =
+        class_getMethodImplementation->GetAddress().GetOpcodeLoadAddress(
+            target);
+  // == mulle-objc has no global forward vector ==
+  // ConstString msg_forward_name("__forward_mulle_objc_object_call");
+  // const Symbol *msg_forward = m_objc_module_sp->FindFirstSymbolWithNameAndType(
+  //     msg_forward_name, eSymbolTypeCode);
+  //
+  //if (msg_forward)
+  //  m_msg_forward_addr = msg_forward->GetAddress().GetOpcodeLoadAddress(target);
+
+  // FIXME: Do some kind of logging here.
+  if (m_impl_fn_addr == LLDB_INVALID_ADDRESS) {
+    // If we can't even find the ordinary get method implementation function,
+    // then we aren't going to be able to
+    // step through any method dispatches.  Warn to that effect and get out of
+    // here.
+    if (target) {
+      target->GetDebugger().GetErrorFile()->Printf(
+          "Could not find implementation lookup function \"%s\""
+          " in \"%s\" (%s)"
+          " stepping through ObjC method dispatch will not work.\n",
+          get_impl_name.AsCString(),
+          m_objc_module_sp->GetFileSpec().GetCString(),
+          class_getMethodImplementation ? "process failure" : "symbol not found");
+    }
+    Log *log(lldb_private::GetLogIfAllCategoriesSet(MULLE_LOG));
+
+    if (log)
+      log->Printf(
+        "Could not find implementation lookup function \"%s\""
+        " in \"%s\" (%s)"
+        " stepping through ObjC method dispatch will not work.\n",
+        get_impl_name.AsCString(),
+        m_objc_module_sp->GetFileSpec().GetCString(),
+        class_getMethodImplementation ? "process failure" : "symbol not found");
+  } else  {
+    m_lookup_implementation_function_code =
+        g_lookup_implementation_function_code;
+  }
 }
 
 
@@ -377,9 +403,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
 
    if( CanStepOver())
    {
-      int   i;
-
-      for( i = 0; i < 4; i++)
+      for( size_t i = 0; i < llvm::array_lengthof(m_classlookup_addr); i++)
          if( curr_pc == m_classlookup_addr[ i])
          {
             if (log)
@@ -610,7 +634,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
    //      void *__lldb_objc_find_implementation_for_selector (void *object,
    //                                                          uint32_t sel,
    //                                                          void *cls_or_superid,
-   //                                                          int is_superid,
+   //                                                          int calltype,
    //                                                          int debug,
    //
    // So set up the arguments for that call.
@@ -626,10 +650,10 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
    }
 
    if( this_dispatch.has_superid_argument)
-      int_value.GetScalar() = 1;
+      int_value.GetScalar() = 2;
    else
       if( this_dispatch.has_class_argument)
-         int_value.GetScalar() = 2;
+         int_value.GetScalar() = 1;
       else
          int_value.GetScalar() = 0;
    dispatch_values.PushValue(int_value);
