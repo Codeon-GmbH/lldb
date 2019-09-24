@@ -306,26 +306,27 @@ static bool _IsSymbolARuntimeThunk(const Symbol &symbol) {
   static ConstString g_c_02 = ConstString( "mulle_objc_object_inlinecall");
   static ConstString g_c_03 = ConstString( "mulle_objc_object_partialinlinecall");
   static ConstString g_c_04 = ConstString( "mulle_objc_object_inlinecall_variablemethodid");
+  static ConstString g_c_05 = ConstString( "mulle_objc_object_call_variablemethodid");
 
 // *** objects calls ***
 
-  static ConstString g_c_05 = ConstString( "mulle_objc_objects_call");
+  static ConstString g_c_06 = ConstString( "mulle_objc_objects_call");
 
 // *** internal calls ***
 
-  static ConstString g_c_06 = ConstString( "_mulle_objc_object_call2");
-  static ConstString g_c_07 = ConstString( "_mulle_objc_object_call2_emptycache");
-  static ConstString g_c_08 = ConstString( "_mulle_objc_object_call2_needcache");
-  static ConstString g_c_09 = ConstString( "_mulle_objc_object_call_class");
-  static ConstString g_c_10 = ConstString( "_mulle_objc_object_call_class_needcache");
-  static ConstString g_c_11 = ConstString( "_mulle_objc_object_call_class_nofail");
-  static ConstString g_c_12 = ConstString( "_mulle_objc_object_call_class_nocache");
+  static ConstString g_c_07 = ConstString( "_mulle_objc_object_call2");
+  static ConstString g_c_08 = ConstString( "_mulle_objc_object_call2_emptycache");
+  static ConstString g_c_09 = ConstString( "_mulle_objc_object_call2_needcache");
+  static ConstString g_c_10 = ConstString( "_mulle_objc_object_call_class");
+  static ConstString g_c_11 = ConstString( "_mulle_objc_object_call_class_needcache");
+  static ConstString g_c_12 = ConstString( "_mulle_objc_object_call_class_nofail");
+  static ConstString g_c_13 = ConstString( "_mulle_objc_object_call_class_nocache");
 
 
 // *** super calls ***
-  static ConstString g_c_13 = ConstString( "_mulle_objc_object_supercall");
-  static ConstString g_c_14 = ConstString( "_mulle_objc_object_inlinesupercall");
-  static ConstString g_c_15 = ConstString( "_mulle_objc_object_partialinlinesupercall");
+  static ConstString g_c_14 = ConstString( "_mulle_objc_object_supercall");
+  static ConstString g_c_15 = ConstString( "_mulle_objc_object_inlinesupercall");
+  static ConstString g_c_16 = ConstString( "_mulle_objc_object_partialinlinesupercall");
 
 
 
@@ -360,6 +361,8 @@ static bool _IsSymbolARuntimeThunk(const Symbol &symbol) {
   if( ConstString::Equals( symbol_name, g_c_14, true))
     return( true);
   if( ConstString::Equals( symbol_name, g_c_15, true))
+    return( true);
+  if( ConstString::Equals( symbol_name, g_c_16, true))
     return( true);
 
   return( false);

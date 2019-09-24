@@ -133,19 +133,22 @@ lldb::addr_t  MulleObjCTrampolineHandler::LookupFunctionSymbol( const lldb::Proc
 
 static const char   *lookup_functions[ 13] =
 {
-  "__mulle_objc_universe_lookup_infraclass_nocache_nofast",
-  "_mulle_objc_universe_inlinelookup_infraclass",
-  "_mulle_objc_universe_inlinelookup_infraclass_nofail",
+  "mulle_objc_object_lookup_infraclass_nofail",// first one MUST be present
+  "mulle_objc_object_lookup_infraclass_nofail_nofast",
+  "mulle_objc_global_lookup_infraclass_nofail_nofast",
+  "mulle_objc_global_lookup_infraclass_nofail",
+
   "_mulle_objc_universe_lookup_infraclass_nocache_nofail_nofast",
   "_mulle_objc_universe_lookup_infraclass_nocache_nofast",
   "_mulle_objc_universe_lookup_infraclass_nofail_nofast",
-  "mulle_objc_global_inlinelookup_infraclass_nofail",
+
+  "_mulle_objc_universe_inlinelookup_infraclass_nocache_nofast",
+  "_mulle_objc_universe_inlinelookup_infraclass_nofail",
+  "_mulle_objc_universe_inlinelookup_infraclass",
+
   "mulle_objc_global_inlinelookup_infraclass_nofail_nofast",
-  "mulle_objc_global_lookup_infraclass_nofail",
-  "mulle_objc_global_lookup_infraclass_nofail_nofast",
-  "mulle_objc_object_inlinelookup_infraclass_nofail",
-  "mulle_objc_object_lookup_infraclass_nofail",
-  "mulle_objc_object_lookup_infraclass_nofail_nofast"
+  "mulle_objc_global_inlinelookup_infraclass_nofail",
+  "mulle_objc_object_inlinelookup_infraclass_nofail"
 };
 
 MulleObjCTrampolineHandler::MulleObjCTrampolineHandler(
