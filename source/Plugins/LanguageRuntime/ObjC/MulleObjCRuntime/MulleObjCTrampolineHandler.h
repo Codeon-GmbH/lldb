@@ -47,6 +47,7 @@ public:
     const char *name;
     bool has_class_argument;
     bool has_superid_argument;
+    bool required;
   };
 
   lldb::addr_t SetupDispatchFunction(Thread &thread,
@@ -59,7 +60,8 @@ protected:
 
 private:
   lldb::addr_t  LookupFunctionSymbol( const lldb::ProcessSP &process_sp,
-                                      const char *name);
+                                      const char *name,
+                                      bool warn_if_missing);
 
   static const DispatchFunction g_dispatch_functions[];
 

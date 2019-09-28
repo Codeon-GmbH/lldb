@@ -76,9 +76,9 @@ MulleObjCTrampolineHandler::~MulleObjCTrampolineHandler() {}
 const MulleObjCTrampolineHandler::DispatchFunction
     MulleObjCTrampolineHandler::g_dispatch_functions[] = {
         // NAME                              HAS_CLASS_ARG  HAS_SUPERID_ARG
-       { "mulle_objc_object_call",            false,  false  },
+       { "mulle_objc_object_call",            false,  false, true  },
        // super calls, where we have a classid as fourth parameter
-       { "_mulle_objc_object_supercall",      false, true  }
+       { "_mulle_objc_object_supercall",      false, true, true  }
        // optimized calls, where we have a class as fourth parameter
 
        // maybe these second stages too ?
@@ -88,7 +88,8 @@ const MulleObjCTrampolineHandler::DispatchFunction
 
 
 lldb::addr_t  MulleObjCTrampolineHandler::LookupFunctionSymbol( const lldb::ProcessSP &process_sp,
-                                                                const char *name)
+                                                                const char *name,
+                                                                bool warn_if_missing)
 {
    // Look up the addresses for the objc dispatch functions and cache them.  For
    // now I'm inspecting the symbol
@@ -122,33 +123,38 @@ lldb::addr_t  MulleObjCTrampolineHandler::LookupFunctionSymbol( const lldb::Proc
       if( log)
         log->Printf("Could not find implementation for function \"%s\"\n",
                                                         name_const_str.AsCString());
-      if(  target) {
-         target->GetDebugger().GetErrorFile()->Printf( "Could not find implementation for function \"%s\"\n",
-                                                        name_const_str.AsCString());
+      if( warn_if_missing)
+      {
+         if(  target) {
+            target->GetDebugger().GetErrorFile()->Printf( "Could not find implementation for function \"%s\"\n",
+                                                         name_const_str.AsCString());
+         }
       }
-
    }
    return( LLDB_INVALID_ADDRESS);
 }
 
-static const char   *lookup_functions[ 13] =
+static const struct {
+   const char   *name;
+   bool         required;
+} lookup_functions[ 13] =
 {
-  "mulle_objc_object_lookup_infraclass_nofail",// first one MUST be present
-  "mulle_objc_object_lookup_infraclass_nofail_nofast",
-  "mulle_objc_global_lookup_infraclass_nofail_nofast",
-  "mulle_objc_global_lookup_infraclass_nofail",
+  { "mulle_objc_object_lookup_infraclass_nofail", true },              // first one MUST be present
+  { "mulle_objc_object_lookup_infraclass_nofail_nofast", true },
+  { "mulle_objc_global_lookup_infraclass_nofail_nofast", true },
+  { "mulle_objc_global_lookup_infraclass_nofail", true },
 
-  "_mulle_objc_universe_lookup_infraclass_nocache_nofail_nofast",
-  "_mulle_objc_universe_lookup_infraclass_nocache_nofast",
-  "_mulle_objc_universe_lookup_infraclass_nofail_nofast",
+  { "_mulle_objc_universe_lookup_infraclass_nocache_nofail_nofast", true },
+  { "_mulle_objc_universe_lookup_infraclass_nocache_nofast", true },
+  { "_mulle_objc_universe_lookup_infraclass_nofail_nofast", true },
 
-  "_mulle_objc_universe_inlinelookup_infraclass_nocache_nofast",
-  "_mulle_objc_universe_inlinelookup_infraclass_nofail",
-  "_mulle_objc_universe_inlinelookup_infraclass",
+  { "_mulle_objc_universe_inlinelookup_infraclass_nocache_nofast", false },
+  { "_mulle_objc_universe_inlinelookup_infraclass_nofail", false },
+  { "_mulle_objc_universe_inlinelookup_infraclass", false },
 
-  "mulle_objc_global_inlinelookup_infraclass_nofail_nofast",
-  "mulle_objc_global_inlinelookup_infraclass_nofail",
-  "mulle_objc_object_inlinelookup_infraclass_nofail"
+  { "mulle_objc_global_inlinelookup_infraclass_nofail_nofast", false },
+  { "mulle_objc_global_inlinelookup_infraclass_nofail", false },
+  { "mulle_objc_object_inlinelookup_infraclass_nofail", false }
 };
 
 MulleObjCTrampolineHandler::MulleObjCTrampolineHandler(
@@ -165,13 +171,16 @@ MulleObjCTrampolineHandler::MulleObjCTrampolineHandler(
 
   for (size_t i = 0; i != llvm::array_lengthof(g_dispatch_functions); i++) {
      sym_addr = LookupFunctionSymbol( process_sp,
-                                      g_dispatch_functions[ i].name);
+                                      g_dispatch_functions[ i].name,
+                                      g_dispatch_functions[ i].required);
      if( sym_addr != LLDB_INVALID_ADDRESS)
         m_msgSend_map.insert(std::pair<lldb::addr_t, int>(sym_addr, i));
   }
 
   for (size_t i = 0; i != llvm::array_lengthof(m_classlookup_addr); i++) {
-    m_classlookup_addr[ i] = LookupFunctionSymbol( process_sp, lookup_functions[ i]);
+    m_classlookup_addr[ i] = LookupFunctionSymbol( process_sp,
+                                                   lookup_functions[ i].name,
+                                                   lookup_functions[ i].required);
   }
 
   ConstString get_impl_name( "mulle_objc_lldb_lookup_implementation");

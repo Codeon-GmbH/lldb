@@ -359,7 +359,10 @@ lldb::addr_t MulleObjCRuntimeV1::CallDangerousGetClassTableFunction( Process *pr
 
    // Next make the runner function for our implementation utility function.
    impl_function_caller = dangerous_function->MakeFunctionCaller(
-                                                                 clang_void_ptr_type, emptyList, thread_sp, error);
+                                                                 clang_void_ptr_type,
+                                                                 emptyList,
+                                                                 thread_sp,
+                                                                 error);
    if (error.Fail()) {
       if (log)
       {
@@ -436,13 +439,19 @@ void MulleObjCRuntimeV1::UpdateISAToDescriptorMapIfNeeded() {
       m_isa_to_descriptor_stop_id = process->GetStopID();
       Log *log(GetLogIfAllCategoriesSet(LIBLLDB_LOG_LANGUAGE));
 
+      if (log && log->GetVerbose())
+         log->Printf("MulleObjCRuntime plugin tries to update ISA map");
       ProcessSP process_sp = process->shared_from_this();
 
       // reread images for Objective-C library, I don't know why
       ModuleSP objc_module_sp(GetMulleObjCRuntimeModule());
 
       if (!objc_module_sp)
+      {
+         if (log && log->GetVerbose())
+            log->Printf("MulleObjCRuntime plugin can't find the runtime module");
          return;
+      }
 
       lldb::addr_t hash_table_ptr = GetISAHashTablePointer( process);
       if (hash_table_ptr == LLDB_INVALID_ADDRESS) {
@@ -480,13 +489,16 @@ void MulleObjCRuntimeV1::UpdateISAToDescriptorMapIfNeeded() {
       {
          case 4 : invalid = (lldb::addr_t) INT32_MIN; break;
          case 8 : invalid = (lldb::addr_t) INT64_MIN; break;
-         default : return;
+         default : abort();
       }
 
       if (process->ReadMemory( hash_table_ptr, buffer.GetBytes(), addr_size * 2, error) !=
           addr_size * 2)
+      {
+         if (log && log->GetVerbose())
+            log->Printf("MulleObjCRuntime plugin can't read process memory");
          return;
-
+      }
       DataExtractor data(buffer.GetBytes(), buffer.GetByteSize(), byte_order,
                          addr_size);
 
@@ -499,7 +511,11 @@ void MulleObjCRuntimeV1::UpdateISAToDescriptorMapIfNeeded() {
       // read in entries en block, skip over n_hashs and mask
       if( process->ReadMemory( hash_table_ptr + 2 * addr_size , buffer.GetBytes(), data_size,
                               error) != data_size)
+      {
+         if (log && log->GetVerbose())
+            log->Printf("MulleObjCRuntime plugin can't read process memory");
          return;
+      }
 
       data.SetData( buffer.GetBytes(), buffer.GetByteSize(), byte_order);
 
