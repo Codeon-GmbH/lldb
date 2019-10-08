@@ -60,9 +60,9 @@
 #include "Plugins/LanguageRuntime/CPlusPlus/ItaniumABI/ItaniumABILanguageRuntime.h"
 // @mulle-lldb@ Initialize runtime >
 #include "Plugins/LanguageRuntime/ObjC/MulleObjCRuntime/MulleObjCRuntimeV1.h"
+//#include "Plugins/LanguageRuntime/ObjC/AppleObjCRuntime/AppleObjCRuntimeV1.h"
+//#include "Plugins/LanguageRuntime/ObjC/AppleObjCRuntime/AppleObjCRuntimeV2.h"
 // @mulle-lldb@ Initialize runtime <
-#include "Plugins/LanguageRuntime/ObjC/AppleObjCRuntime/AppleObjCRuntimeV1.h"
-#include "Plugins/LanguageRuntime/ObjC/AppleObjCRuntime/AppleObjCRuntimeV2.h"
 #include "Plugins/LanguageRuntime/RenderScript/RenderScriptRuntime/RenderScriptRuntime.h"
 #include "Plugins/MemoryHistory/asan/MemoryHistoryASan.h"
 #include "Plugins/ObjectContainer/BSD-Archive/ObjectContainerBSDArchive.h"
@@ -227,9 +227,9 @@ llvm::Error SystemInitializerFull::Initialize() {
   // @mulle-lldb@ Initialize runtime >
   // initialize ahead of AppleRuntimes, so we get searched first
   MulleObjCRuntimeV1::Initialize();
+  // AppleObjCRuntimeV2::Initialize();
+  // AppleObjCRuntimeV1::Initialize();
   // @mulle-lldb@ Initialize runtime <
-  AppleObjCRuntimeV2::Initialize();
-  AppleObjCRuntimeV1::Initialize();
   SystemRuntimeMacOSX::Initialize();
   RenderScriptRuntime::Initialize();
 
@@ -336,8 +336,14 @@ void SystemInitializerFull::Terminate() {
 
   SymbolFileDWARFDebugMap::Terminate();
   ItaniumABILanguageRuntime::Terminate();
-  AppleObjCRuntimeV2::Terminate();
-  AppleObjCRuntimeV1::Terminate();
+
+  // @mulle-lldb@ Terminate runtime >
+  //  AppleObjCRuntimeV2::Terminate();
+  //  AppleObjCRuntimeV1::Terminate();
+  // Terminate after AppleRuntimes (if)
+  MulleObjCRuntimeV1::Terminate();
+  // @mulle-lldb@ Terminate runtime <
+
   SystemRuntimeMacOSX::Terminate();
   RenderScriptRuntime::Terminate();
 

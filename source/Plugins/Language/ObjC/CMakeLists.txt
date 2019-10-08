@@ -30,9 +30,9 @@ add_lldb_library(lldbPluginObjCLanguage PLUGIN
     lldbSymbol
     lldbTarget
     lldbUtility
-# @mulle-objc@ >
+# @mulle-lldb@ add plugin to CMake >
     lldbPluginMulleObjCRuntime
-# @mulle-objc@ <
+# @mulle-lldb@ add plugin to CMake <
     lldbPluginAppleObjCRuntime
     lldbPluginClangCommon
 

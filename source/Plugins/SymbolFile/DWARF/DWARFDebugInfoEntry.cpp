@@ -994,7 +994,9 @@ DWARFDebugInfoEntry::GetQualifiedName(DWARFUnit *cu,
         const char *class_union_struct_name = parent_decl_ctx_die.GetName();
 
         if (class_union_struct_name) {
+          // @mulle-lldb@ get rid of the C++ destroying class names >
           storage.insert(0, "::");
+          // @mulle-lldb@ get rid of the C++ destroying class names <
           storage.insert(0, class_union_struct_name);
         }
         parent_decl_ctx_die = parent_decl_ctx_die.GetParentDeclContextDIE();
@@ -1006,8 +1008,10 @@ DWARFDebugInfoEntry::GetQualifiedName(DWARFUnit *cu,
       }
     }
 
+    // @mulle-lldb@ get rid of the C++ destroying class names >
     if (storage.empty())
       storage.append("::");
+    // @mulle-lldb@ get rid of the C++ destroying class names >
 
     storage.append(name);
   }

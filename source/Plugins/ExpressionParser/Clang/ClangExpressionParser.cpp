@@ -520,16 +520,19 @@ ClangExpressionParser::ClangExpressionParser(
       else
 /// @mulle-lldb@ change to Mulle runtime >
       {
+        // @mulle-lldb@ MUST CHANGE VERSION FOR EACH LLDB RELEASE!!
         m_compiler->getLangOpts().ObjCRuntime.set(ObjCRuntime::Mulle,
-                                                  VersionTuple(0, 12));
+                                                  VersionTuple(0, 16));
         // tagged pointers are not good for JIT, but I don't know exactly why yet
         // m_compiler->getLangOpts().ObjCDisableTaggedPointers = true;
 
         // turning off C++ is not good, because internally lldb assumes it
         // compiles everything with C++ and then wants really C and puts "extern C"
-        // in front of it
-        // m_compiler->getLangOpts().CPlusPlus = false;
-        // m_compiler->getLangOpts().CPlusPlus11 = false;
+        // in front of it. It also exposed local variables into the source using
+        // some strange "using" trick, I don't understand. Bottomline: FCK!
+        //
+        //m_compiler->getLangOpts().CPlusPlus = false;
+        //m_compiler->getLangOpts().CPlusPlus11 = false;
       }
 /// @mulle-lldb@ change to Mulle runtime <
 

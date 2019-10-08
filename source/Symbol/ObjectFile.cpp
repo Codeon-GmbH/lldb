@@ -636,6 +636,8 @@ ObjectFile::GetSymbolTypeFromName(llvm::StringRef name,
       return lldb::eSymbolTypeObjCClass;
     }
     // @mulle-lldb@ find classes for symtab >
+    // not as useful as it may sound, because noone uses this
+    // information apparently ?
      else if (name.startswith("OBJC_CLASS_$_")) {
       // ObjC v1
       return lldb::eSymbolTypeObjCClass;
