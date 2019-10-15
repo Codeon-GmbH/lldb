@@ -25,6 +25,15 @@
 
 namespace lldb_private {
 
+// MEMO:
+// The way the runtime interfaces with the debugger is via
+// LanguageRuntime::FindPlugin. This will in turn call
+// MulleObjCRuntimeV1::CreateInstance and this will look into
+// the process image table and search for anything that declares
+// `mulle_objc_lldb_lookup_implementation` (via IsMulleObjCRuntimeModule
+// and GetObjCVersion). With that the process is marked as being
+// MulleObjC and MuilleObjCRuntimeV1 is set as the runtime.
+//
 class MulleObjCRuntime : public lldb_private::ObjCLanguageRuntime {
 public:
   ~MulleObjCRuntime() override;

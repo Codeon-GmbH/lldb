@@ -125,7 +125,7 @@ lldb::addr_t  MulleObjCTrampolineHandler::LookupFunctionSymbol( const lldb::Proc
                                                         name_const_str.AsCString());
       if( warn_if_missing)
       {
-         if(  target) {
+         if( target) {
             target->GetDebugger().GetErrorFile()->Printf( "Could not find implementation for function \"%s\"\n",
                                                          name_const_str.AsCString());
          }

@@ -16,6 +16,7 @@
 #include "lldb/Core/ModuleSpec.h"
 #include "lldb/Core/SearchFilter.h"
 #include "lldb/Core/Section.h"
+#include "lldb/Core/StreamFile.h"
 #include "lldb/Host/FileSystem.h"
 #include "lldb/Host/Host.h"
 #include "lldb/Interpreter/CommandInterpreter.h"
@@ -1377,6 +1378,12 @@ size_t Module::FindSymbolsWithNameAndType(ConstString name,
     Symtab *symtab = sym_vendor->GetSymtab();
     if (symtab) {
       std::vector<uint32_t> symbol_indexes;
+
+// @mulle-nat@ helpful when class is not found
+//      StreamFile s(stderr, false);
+//      s.Printf ("Symbol table of module %s:\n", name.AsCString());
+//      symtab->Dump( &s, NULL, eSortOrderNone);
+
       symtab->FindAllSymbolsWithNameAndType(name, symbol_type, symbol_indexes);
       SymbolIndicesToSymbolContextList(symtab, symbol_indexes, sc_list);
     }
