@@ -745,6 +745,7 @@ bool ValueObjectPrinter::PrintChildrenOneLiner(bool hide_names) {
   return true;
 }
 
+
 void ValueObjectPrinter::PrintChildrenIfNeeded(bool value_printed,
                                                bool summary_printed) {
   // This flag controls whether we tried to display a description for this

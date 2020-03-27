@@ -933,7 +933,11 @@ TypeSP DWARFASTParserClang::ParseSubroutine(const DWARFDIE &die,
 
           clang::ObjCMethodDecl *objc_method_decl =
               m_ast.AddMethodToObjCObjectType(
-                  class_opaque_type, attrs.name.GetCString(), clang_type,
+                  class_opaque_type, attrs.name.GetCString(),
+/// @mulle-lldb@ add decls for parameter names >
+                  function_param_decls,
+/// @mulle-lldb@ add decls for parameter names <
+                  clang_type,
                   attrs.accessibility, attrs.is_artificial, is_variadic,
                   attrs.is_objc_direct_call);
           type_handled = objc_method_decl != NULL;
@@ -2977,6 +2981,73 @@ bool DWARFASTParserClang::ParseChildMembers(
   return true;
 }
 
+/// @mulle-lldb@ make _param function arguments again >
+/*
+ <2><64>: Abbrev Number: 4 (DW_TAG_formal_parameter)
+    <65>   DW_AT_location    : 2 byte block: 91 68      (DW_OP_fbreg: -24)
+    <68>   DW_AT_name        : (indirect string, offset: 0x9c): _param
+    <6c>   DW_AT_type        : <0x84> ***reference to DW_TAG_pointer_type***
+    <70>   DW_AT_artificial  : 1
+ <1><84>: Abbrev Number: 5 (DW_TAG_pointer_type)
+    <85>   DW_AT_type        : <0x89>
+ <1><89>: Abbrev Number: 8 (DW_TAG_structure_type)
+    <8a>   DW_AT_name        : (indirect string, offset: 0xb6): p.a:b:
+    <8e>   DW_AT_byte_size   : 16
+    <8f>   DW_AT_decl_file   : 1
+    <90>   DW_AT_decl_line   : 9
+ <2><91>: Abbrev Number: 9 (DW_TAG_member)
+    <92>   DW_AT_name        : (indirect string, offset: 0xa3): a
+    <96>   DW_AT_type        : <0xaa>
+    <9a>   DW_AT_decl_file   : 1
+    <9b>   DW_AT_decl_line   : 9
+    <9c>   DW_AT_data_member_location: 0
+*/
+
+bool DWARFASTParserClang::ParseMulleABIParameters( const DWARFDIE &die,
+  clang::DeclContext *containing_decl_ctx,
+  const lldb_private::CompilerType &compiler_type,
+  std::vector<lldb_private::CompilerType> &function_param_types,
+  std::vector<clang::ParmVarDecl *> &function_param_decls,
+  clang::StorageClass storage)
+{
+  if( ! compiler_type.IsPointerType())
+    return( false);
+
+  CompilerType  paramType;
+
+  paramType = compiler_type.GetPointeeType();
+  if( ! paramType.IsAggregateType())
+    return( false);
+
+  uint32_t      i, n;
+  CompilerType  fieldType;
+  std::string   name;
+  uint64_t      bit_offset_ptr;
+  uint32_t      bitfield_bit_size_ptr;
+  bool          is_bitfield_ptr;
+
+  n = paramType.GetNumFields();
+  for( i = 0; i < n; i++)
+  {
+    fieldType = paramType.GetFieldAtIndex( i,
+                                           name,
+                                           &bit_offset_ptr,
+                                           &bitfield_bit_size_ptr,
+                                           &is_bitfield_ptr);
+    function_param_types.push_back( fieldType);
+
+    clang::ParmVarDecl *param_var_decl =
+        m_ast.CreateParameterDeclaration( containing_decl_ctx,
+            name.c_str(), fieldType, storage);
+    assert(param_var_decl);
+    function_param_decls.push_back(param_var_decl);
+
+    m_ast.SetMetadataAsUserID(param_var_decl, die.GetID());
+  }
+  return( true);
+}
+/// @mulle-lldb@ make _param function arguments again <
+
 size_t DWARFASTParserClang::ParseChildParameters(
     clang::DeclContext *containing_decl_ctx, const DWARFDIE &parent_die,
     bool skip_artificial, bool &is_static, bool &is_variadic,
@@ -2985,6 +3056,11 @@ size_t DWARFASTParserClang::ParseChildParameters(
     unsigned &type_quals) {
   if (!parent_die)
     return 0;
+
+/// @mulle-lldb@ make _param function arguments again >
+  bool skipRemainingParameters = false;
+  bool skip;
+/// @mulle-lldb@ make _param function arguments again <
 
   size_t arg_idx = 0;
   for (DWARFDIE die = parent_die.GetFirstChild(); die.IsValid();
@@ -3032,7 +3108,8 @@ size_t DWARFASTParserClang::ParseChildParameters(
           }
         }
 
-        bool skip = false;
+        skip = skipRemainingParameters;
+
         if (skip_artificial && is_artificial) {
           // In order to determine if a C++ member function is "const" we
           // have to look at the const-ness of "this"...
@@ -3053,10 +3130,38 @@ size_t DWARFASTParserClang::ParseChildParameters(
                   type_quals |= clang::Qualifiers::Const;
                 if (encoding_mask & (1u << Type::eEncodingIsVolatileUID))
                   type_quals |= clang::Qualifiers::Volatile;
+                skip = true;
               }
             }
           }
-          skip = true;
+
+          LanguageType cu_language = die.GetLanguage();
+          // if artificial and ObjC skip this always
+          if (cu_language == eLanguageTypeObjC ||
+              cu_language == eLanguageTypeObjC_plus_plus)
+          {
+            skip = true;
+          }
+          /// @mulle-lldb@ make _param function arguments again >
+          // _param is now also artificial
+          if( arg_idx == 2 && name && strcmp( name, "_param") == 0)
+          {
+            if (cu_language == eLanguageTypeObjC ||
+              cu_language == eLanguageTypeObjC_plus_plus) {
+              Type *type = die.ResolveTypeUID(param_type_die_form.Reference());
+              if (type) {
+                  ParseMulleABIParameters( die,
+                                          containing_decl_ctx,
+                                          type->GetForwardCompilerType(),
+                                          function_param_types,
+                                          function_param_decls,
+                                          storage);
+                  skipRemainingParameters = true;
+                  break;
+              }
+            }
+          }
+          /// @mulle-lldb@ make _param function arguments again <
         }
 
         if (!skip) {

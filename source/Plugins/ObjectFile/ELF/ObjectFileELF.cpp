@@ -2026,7 +2026,12 @@ unsigned ObjectFileELF::ParseSymbols(Symtab *symtab, user_id_t start_id,
       case STT_OBJECT:
         // The symbol is associated with a data object, such as a variable, an
         // array, etc.
-        symbol_type = eSymbolTypeData;
+        // @mulle-lldb@ add default OBJC name detection for ELF >
+        // problem then NSObject will reside as OBJC_CLASS_$_NSObject in the
+        // symbol table, how does that help ?
+        //
+        symbol_type = GetSymbolTypeFromName( symbol_name, eSymbolTypeData);
+        // @mulle-lldb@ add default OBJC name detection for ELF <
         break;
 
       case STT_FUNC:

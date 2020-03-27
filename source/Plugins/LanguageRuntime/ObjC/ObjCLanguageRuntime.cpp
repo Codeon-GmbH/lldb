@@ -102,6 +102,8 @@ ObjCLanguageRuntime::LookupInCompleteClassCache(ConstString &name) {
 
   const ModuleList &modules = m_process->GetTarget().GetImages();
 
+  std::string   tmp = std::string("OBJC_CLASS_$_") + std::string(name.AsCString());
+  const ConstString externalName = ConstString( tmp.c_str());
   SymbolContextList sc_list;
   modules.FindSymbolsWithNameAndType(name, eSymbolTypeObjCClass, sc_list);
   const size_t matching_symbols = sc_list.GetSize();

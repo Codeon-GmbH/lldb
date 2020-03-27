@@ -1,0 +1,48 @@
+extern "C"
+{
+   static const
+   struct mulle_clang_objccompilerinfo
+   {
+      unsigned int   load_version;
+      unsigned int   runtime_version;
+   } __mulle_objc_objccompilerinfo =
+   {
+      16, // @mulle-objc@ load version must match
+      0   // 0 to not emit __load_mulle_objc
+   };
+
+   //
+   // this file is transformed with make-inc.sh into mulle-objc-lookup.inc
+   // which is then included into MulleObjCTrampolineHandler.cpp
+   //
+   // use code in mulle_objc_runtime to do the actual call
+   // I still use this wrapping function in lldb, because I am too lazy
+   // to figure out how to do this correctly (and you are probabaly too :P)
+   //
+   struct mulle_objc_lldb_lookup_implementation_args
+   {
+      void   *class_or_superid;
+      int    calltype;
+      int    debug;
+   };
+
+   void   *__lldb_objc_find_implementation_for_selector( void *object,
+                                                         uint32_t methodid,
+                                                         void   *class_or_superid,
+                                                         int calltype,
+                                                         int debug)
+   {
+      extern void   *mulle_objc_lldb_lookup_implementation( void *obj,
+                                                            uint32_t methodid,
+                                                            struct mulle_objc_lldb_lookup_implementation_args *args);
+      struct mulle_objc_lldb_lookup_implementation_args   args;
+
+      args.class_or_superid = class_or_superid;
+      args.calltype         = calltype;
+      args.debug            = debug;
+
+      return( mulle_objc_lldb_lookup_implementation( object,
+                                                     methodid,
+                                                     &args));
+   }
+}
