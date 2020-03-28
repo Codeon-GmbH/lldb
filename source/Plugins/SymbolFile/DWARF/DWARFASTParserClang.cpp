@@ -934,9 +934,9 @@ TypeSP DWARFASTParserClang::ParseSubroutine(const DWARFDIE &die,
           clang::ObjCMethodDecl *objc_method_decl =
               m_ast.AddMethodToObjCObjectType(
                   class_opaque_type, attrs.name.GetCString(),
-/// @mulle-lldb@ add decls for parameter names >
+/// @mulle-objc@ add decls for parameter names >
                   function_param_decls,
-/// @mulle-lldb@ add decls for parameter names <
+/// @mulle-objc@ add decls for parameter names <
                   clang_type,
                   attrs.accessibility, attrs.is_artificial, is_variadic,
                   attrs.is_objc_direct_call);
@@ -2981,7 +2981,7 @@ bool DWARFASTParserClang::ParseChildMembers(
   return true;
 }
 
-/// @mulle-lldb@ make _param function arguments again >
+/// @mulle-objc@ make _param function arguments again >
 /*
  <2><64>: Abbrev Number: 4 (DW_TAG_formal_parameter)
     <65>   DW_AT_location    : 2 byte block: 91 68      (DW_OP_fbreg: -24)
@@ -3046,7 +3046,7 @@ bool DWARFASTParserClang::ParseMulleABIParameters( const DWARFDIE &die,
   }
   return( true);
 }
-/// @mulle-lldb@ make _param function arguments again <
+/// @mulle-objc@ make _param function arguments again <
 
 size_t DWARFASTParserClang::ParseChildParameters(
     clang::DeclContext *containing_decl_ctx, const DWARFDIE &parent_die,
@@ -3057,10 +3057,10 @@ size_t DWARFASTParserClang::ParseChildParameters(
   if (!parent_die)
     return 0;
 
-/// @mulle-lldb@ make _param function arguments again >
+/// @mulle-objc@ make _param function arguments again >
   bool skipRemainingParameters = false;
   bool skip;
-/// @mulle-lldb@ make _param function arguments again <
+/// @mulle-objc@ make _param function arguments again <
 
   size_t arg_idx = 0;
   for (DWARFDIE die = parent_die.GetFirstChild(); die.IsValid();
@@ -3142,7 +3142,7 @@ size_t DWARFASTParserClang::ParseChildParameters(
           {
             skip = true;
           }
-          /// @mulle-lldb@ make _param function arguments again >
+          /// @mulle-objc@ make _param function arguments again >
           // _param is now also artificial
           if( arg_idx == 2 && name && strcmp( name, "_param") == 0)
           {
@@ -3161,7 +3161,7 @@ size_t DWARFASTParserClang::ParseChildParameters(
               }
             }
           }
-          /// @mulle-lldb@ make _param function arguments again <
+          /// @mulle-objc@ make _param function arguments again <
         }
 
         if (!skip) {

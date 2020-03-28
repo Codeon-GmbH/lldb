@@ -77,7 +77,7 @@ bool ThreadPlanShouldStopHere::DefaultShouldStopHereCallback(
     }
   }
 
-  // @mulle-lldb@ code from swift-lldb  >
+  // @mulle-objc@ code from swift-lldb  >
   // https://github.com/apple/swift-lldb/blob/stable/source/Target/ThreadPlanShouldStopHere.cpp
   // (thx to jim ingham)
   // Check whether the frame we are in is a language runtime thunk, only for
@@ -102,7 +102,7 @@ bool ThreadPlanShouldStopHere::DefaultShouldStopHereCallback(
       }
     }
   }
-  // @mulle-lldb@ code from swift-lldb (thx to jim ingham) <
+  // @mulle-objc@ code from swift-lldb (thx to jim ingham) <
 
   // Always avoid code with line number 0.
   // FIXME: At present the ShouldStop and the StepFromHere calculate this

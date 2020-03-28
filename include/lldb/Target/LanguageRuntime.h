@@ -131,10 +131,10 @@ public:
 
   Process *GetProcess() { return m_process; }
 
-  // @mulle-lldb@ code from swift-lldb  >
+  // @mulle-objc@ code from swift-lldb  >
   virtual bool IsSymbolARuntimeThunk(const Symbol &symbol) { return false; }
-  // @mulle-lldb@ code from swift-lldb  <
- 
+  // @mulle-objc@ code from swift-lldb  <
+
   Target &GetTargetRef() { return m_process->GetTarget(); }
 
   virtual DeclVendor *GetDeclVendor() { return nullptr; }

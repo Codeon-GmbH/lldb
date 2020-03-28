@@ -1844,7 +1844,7 @@ void ObjectFileELF::CreateSections(SectionList &unified_section_list) {
   // unified section list.
   if (GetType() != eTypeDebugInfo)
     unified_section_list = *m_sections_up;
-  
+
   // If there's a .gnu_debugdata section, we'll try to read the .symtab that's
   // embedded in there and replace the one in the original object file (if any).
   // If there's none in the orignal object file, we add it to it.
@@ -1862,7 +1862,7 @@ void ObjectFileELF::CreateSections(SectionList &unified_section_list) {
           unified_section_list.AddSection(symtab_section_sp);
       }
     }
-  }  
+  }
 }
 
 std::shared_ptr<ObjectFileELF> ObjectFileELF::GetGnuDebugDataObjectFile() {
@@ -1906,7 +1906,7 @@ std::shared_ptr<ObjectFileELF> ObjectFileELF::GetGnuDebugDataObjectFile() {
   ArchSpec spec = m_gnu_debug_data_object_file->GetArchitecture();
   if (spec && m_gnu_debug_data_object_file->SetModulesArchitecture(spec))
     return m_gnu_debug_data_object_file;
-  
+
   return nullptr;
 }
 
@@ -2026,12 +2026,12 @@ unsigned ObjectFileELF::ParseSymbols(Symtab *symtab, user_id_t start_id,
       case STT_OBJECT:
         // The symbol is associated with a data object, such as a variable, an
         // array, etc.
-        // @mulle-lldb@ add default OBJC name detection for ELF >
+        // @mulle-objc@ add default OBJC name detection for ELF >
         // problem then NSObject will reside as OBJC_CLASS_$_NSObject in the
         // symbol table, how does that help ?
         //
         symbol_type = GetSymbolTypeFromName( symbol_name, eSymbolTypeData);
-        // @mulle-lldb@ add default OBJC name detection for ELF <
+        // @mulle-objc@ add default OBJC name detection for ELF <
         break;
 
       case STT_FUNC:

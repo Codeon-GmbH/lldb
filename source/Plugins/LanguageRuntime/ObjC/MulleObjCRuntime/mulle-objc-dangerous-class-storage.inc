@@ -7,7 +7,7 @@
 "unsigned int   runtime_version;\n"
 "} __mulle_objc_objccompilerinfo =\n"
 "{\n"
-"16, \n"
+"17, \n"
 "0   \n"
 "};\n"
 "void   *__lldb_objc_get_dangerous_class_storage( void)\n"

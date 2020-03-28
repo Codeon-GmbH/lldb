@@ -21,6 +21,7 @@
 #include "lldb/Core/ValueObject.h"
 #include "lldb/Expression/DiagnosticManager.h"
 #include "lldb/Expression/FunctionCaller.h"
+#include "lldb/Symbol/SymbolContext.h"
 #include "lldb/Symbol/ClangASTContext.h"
 #include "lldb/Symbol/ObjectFile.h"
 #include "lldb/Target/ExecutionContext.h"
@@ -105,7 +106,7 @@ bool MulleObjCRuntime::GetObjectDescription(Stream &strm, Value &value,
     }
   } else {
     // If it is not a pointer, see if we can make it into a pointer.
-    ClangASTContext *ast_context = target->GetScratchClangASTContext();
+    ClangASTContext *ast_context = ClangASTContext::GetScratch(*target, false);
     CompilerType opaque_type = ast_context->GetBasicType(eBasicTypeObjCID);
     if (!opaque_type)
       opaque_type = ast_context->GetBasicType(eBasicTypeVoid).GetPointerType();
@@ -117,7 +118,7 @@ bool MulleObjCRuntime::GetObjectDescription(Stream &strm, Value &value,
   arg_value_list.PushValue(value);
 
   // This is the return value:
-  ClangASTContext *ast_context = target->GetScratchClangASTContext();
+  ClangASTContext *ast_context = ClangASTContext::GetScratch(*target, false);
 
   CompilerType return_compiler_type = ast_context->GetCStringType(true);
   Value ret;
@@ -215,16 +216,20 @@ Address *MulleObjCRuntime::GetPrintForDebuggerAddr() {
   if (!m_PrintForDebugger_addr) {
     const ModuleList &modules = m_process->GetTarget().GetImages();
 
-    SymbolContextList contexts;
     SymbolContext context;
+    SymbolContextList sc_list;
 
-    if ((!modules.FindSymbolsWithNameAndType(ConstString("_NSPrintForDebugger"),
-                                             eSymbolTypeCode, contexts)) &&
-        (!modules.FindSymbolsWithNameAndType(ConstString("_CFPrintForDebugger"),
-                                             eSymbolTypeCode, contexts)))
-      return NULL;
+    modules.FindSymbolsWithNameAndType(ConstString("_NSPrintForDebugger"),
+                                             eSymbolTypeCode, sc_list);
+    if( ! sc_list.GetSize())
+    {
+      modules.FindSymbolsWithNameAndType(ConstString("_CFPrintForDebugger"),
+                                             eSymbolTypeCode, sc_list);
+      if( ! sc_list.GetSize())
+        return NULL;
+    }
 
-    contexts.GetContextAtIndex(0, context);
+    sc_list.GetContextAtIndex(0, context);
 
     m_PrintForDebugger_addr.reset(new Address(context.symbol->GetAddress()));
   }
@@ -280,21 +285,21 @@ bool MulleObjCRuntime::IsMulleObjCRuntimeModule(const ModuleSP &module_sp) {
    if (! module_sp)
       return false;
 
-   SymbolContextList contexts;
-
    //
    // if mulle_objc_lldb_lookup_implementation then this module
    // contains the mulle_objc_runtime lldb code
    //
-   if( module_sp->FindSymbolsWithNameAndType(
-                                             ConstString( "mulle_objc_lldb_lookup_implementation"),
-                                             eSymbolTypeCode, contexts))
-   {
-      //fprintf( stderr, "MulleObjC runtime IN DA HOUSE at \"%s\"!!\n",
-      //        module_sp->GetFileSpec().GetFilename().AsCString());
-      return true;
-   }
-   return false;
+    SymbolContext context;
+    SymbolContextList sc_list;
+
+    module_sp->FindSymbolsWithNameAndType(ConstString("mulle_objc_lldb_lookup_implementation"),
+                                             eSymbolTypeCode, sc_list);
+    if( ! sc_list.GetSize())
+      return( false);
+
+   //fprintf( stderr, "MulleObjC runtime IN DA HOUSE at \"%s\"!!\n",
+   //        module_sp->GetFileSpec().GetFilename().AsCString());
+   return true;
 }
 
 

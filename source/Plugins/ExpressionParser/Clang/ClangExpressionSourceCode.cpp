@@ -403,8 +403,8 @@ bool ClangExpressionSourceCode::GetText(
                        debug_macros_stream.GetData(), g_expression_prefix,
                        target_specific_defines, m_prefix.c_str());
 
-    /// @mulle-lldb@ hack some mulle-objc-runtime stuff into the expression >
-    /// @mulle-lldb@ MUST CHANGE VERSION FOR EACH LLDB RELEASE!!
+    /// @mulle-objc@ hack some mulle-objc-runtime stuff into the expression >
+    /// @mulle-objc@ MUST CHANGE VERSION FOR EACH LLDB RELEASE!!
     wrap_stream.Printf("\
 static const struct   mulle_clang_objccompilerinfo\n\
 {\n\
@@ -417,7 +417,7 @@ static const struct   mulle_clang_objccompilerinfo\n\
 };\n\
 ");
 
-    /// @mulle-lldb@ hack some mulle-objc-runtime stuff into the expression <
+    /// @mulle-objc@ hack some mulle-objc-runtime stuff into the expression <
 
     // First construct a tagged form of the user expression so we can find it
     // later:

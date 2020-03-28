@@ -803,9 +803,9 @@ public:
       const char *name, // the full symbol name as seen in the symbol table
                         // (lldb::opaque_compiler_type_t type, "-[NString
                         // stringWithCString:]")
-/// @mulle-lldb@ add this for parameter names >
+/// @mulle-objc@ add this for parameter names >
     std::vector<clang::ParmVarDecl *> &function_param_decls,
-/// @mulle-lldb@ add this for parameter names <
+/// @mulle-objc@ add this for parameter names <
       const CompilerType &method_compiler_type, lldb::AccessType access,
       bool is_artificial, bool is_variadic, bool is_objc_direct_call);
 

@@ -73,7 +73,7 @@ ClangASTSource::~ClangASTSource() {
     return;
   // We are in the process of destruction, don't create clang ast context on
   // demand by passing false to
-  // Target::GetScratchClangASTContext(create_on_demand).
+  // Target::GetScratch(create_on_demand).
   ClangASTContext *scratch_clang_ast_context =
       ClangASTContext::GetScratch(*m_target, false);
 

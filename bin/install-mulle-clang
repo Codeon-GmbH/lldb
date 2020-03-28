@@ -1090,7 +1090,7 @@ download_llvm()
 
 download_clang()
 {
-   if [ ! -d "${MULLE_CLANG_DIR}" ]
+   if [ ! -d "${MULLE_CLANG_DIR}" -a ! -L "${MULLE_CLANG_DIR}" ]
    then
       log_info "mulle-clang ${MULLE_CLANG_ARCHIVENAME}"
 
@@ -1104,7 +1104,7 @@ download_clang()
 
 download_lldb()
 {
-   if [ ! -d "${MULLE_LLDB_DIR}" ]
+   if [ ! -d "${MULLE_LLDB_DIR}" -a ! -L "${MULLE_LLDB_DIR}" ]
    then
       log_info "mulle-lldb ${MULLE_LLDB_ARCHIVENAME}"
 

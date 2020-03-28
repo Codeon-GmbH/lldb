@@ -613,10 +613,10 @@ void DWARFUnit::ParseProducerInfo() {
                           "[\\.0-9]+\\)$"));
       if (llvm_gcc_regex.Execute(llvm::StringRef(producer_cstr))) {
         m_producer = eProducerLLVMGCC;
-      // @mulle-lldb@ we look like Apple here >
+      // @mulle-objc@ we look like Apple here >
       } else if (strstr(producer_cstr, "mulle-clang")) {
         m_producer = eProducerLLVMGCC;
-      // @mulle-lldb@ we look like Apple here <
+      // @mulle-objc@ we look like Apple here <
       } else if (strstr(producer_cstr, "clang")) {
         static RegularExpression g_clang_version_regex(
             llvm::StringRef("clang-([0-9]+)\\.([0-9]+)\\.([0-9]+)"));

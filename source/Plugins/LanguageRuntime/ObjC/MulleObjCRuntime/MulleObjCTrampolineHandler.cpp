@@ -126,7 +126,7 @@ lldb::addr_t  MulleObjCTrampolineHandler::LookupFunctionSymbol( const lldb::Proc
       if( warn_if_missing)
       {
          if( target) {
-            target->GetDebugger().GetErrorFile()->Printf( "Could not find implementation for function \"%s\"\n",
+            target->GetDebugger().GetErrorFile().Printf( "Could not find implementation for function \"%s\"\n",
                                                          name_const_str.AsCString());
          }
       }
@@ -208,7 +208,7 @@ MulleObjCTrampolineHandler::MulleObjCTrampolineHandler(
     // step through any method dispatches.  Warn to that effect and get out of
     // here.
     if (target) {
-      target->GetDebugger().GetErrorFile()->Printf(
+      target->GetDebugger().GetErrorFile().Printf(
           "Could not find implementation lookup function \"%s\""
           " in \"%s\" (%s)"
           " stepping through ObjC method dispatch will not work.\n",
@@ -281,8 +281,7 @@ MulleObjCTrampolineHandler::SetupDispatchFunction(Thread &thread,
       }
 
       // Next make the runner function for our implementation utility function.
-      ClangASTContext *clang_ast_context =
-          thread.GetProcess()->GetTarget().GetScratchClangASTContext();
+      ClangASTContext *clang_ast_context = ClangASTContext::GetScratch(thread.GetProcess()->GetTarget(), false);
       CompilerType clang_void_ptr_type =
           clang_ast_context->GetBasicType(eBasicTypeVoid).GetPointerType();
       Status error;
@@ -476,7 +475,7 @@ MulleObjCTrampolineHandler::GetStepThroughDispatchPlan( Thread &thread,
    }
    TargetSP target_sp (thread.CalculateTarget());
 
-   ClangASTContext *clang_ast_context = target_sp->GetScratchClangASTContext();
+   ClangASTContext *clang_ast_context = ClangASTContext::GetScratch(*target_sp, false);
    ValueList argument_values;
 
    Value void_ptr_value;

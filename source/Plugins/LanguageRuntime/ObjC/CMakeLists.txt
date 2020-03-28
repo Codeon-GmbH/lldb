@@ -8,6 +8,6 @@ add_lldb_library(lldbPluginObjCRuntime PLUGIN
     lldbUtility
 )
 add_subdirectory(AppleObjCRuntime)
-# @mulle-lldb@ >
+# @mulle-objc@ >
 add_subdirectory(MulleObjCRuntime)
-# @mulle-lldb@ <
+# @mulle-objc@ <

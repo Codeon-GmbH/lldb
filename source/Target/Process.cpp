@@ -4595,15 +4595,15 @@ HandleStoppedEvent(Thread &thread, const ThreadPlanSP &thread_plan_sp,
   return eExpressionInterrupted;
 }
 
-// @mulle-lldb@ avoid failed threadplan calling formatters that execute a threadplan again >
+// @mulle-objc@ avoid failed threadplan calling formatters that execute a threadplan again >
 bool Process::isThreadPlanLocked( void)
 {
    if( ! m_run_thread_plan_lock.try_lock())
-      return( true);   
+      return( true);
    m_run_thread_plan_lock.unlock();
-   return( false);   
+   return( false);
 }
-// @mulle-lldb@ avoid failed threadplan calling formatters that execute a threadplan again <
+// @mulle-objc@ avoid failed threadplan calling formatters that execute a threadplan again <
 
 ExpressionResults
 Process::RunThreadPlan(ExecutionContext &exe_ctx,

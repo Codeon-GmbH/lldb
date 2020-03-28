@@ -145,14 +145,14 @@ protected:
                                   const DWARFDIE &dst_class_die,
                                   lldb_private::Type *class_type,
                                   std::vector<DWARFDIE> &failures);
-/// @mulle-lldb@ make _param function arguments again >
+/// @mulle-objc@ make _param function arguments again >
    bool ParseMulleABIParameters( const DWARFDIE &die,
       clang::DeclContext *containing_decl_ctx,
       const lldb_private::CompilerType &compiler_type,
       std::vector<lldb_private::CompilerType> &function_param_types,
       std::vector<clang::ParmVarDecl *> &function_param_decls,
       clang::StorageClass storage);
-/// @mulle-lldb@ make _param function arguments again <
+/// @mulle-objc@ make _param function arguments again <
   clang::DeclContext *GetCachedClangDeclContextForDIE(const DWARFDIE &die);
 
   void LinkDeclContextToDIE(clang::DeclContext *decl_ctx, const DWARFDIE &die);

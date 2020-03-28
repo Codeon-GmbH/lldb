@@ -425,10 +425,10 @@ bool IRForTarget::RewriteObjCConstString(llvm::GlobalVariable *ns_str,
   if (!m_CFStringCreateWithBytes) {
     lldb::addr_t CFStringCreateWithBytes_addr;
 
-/// @mulle-lldb@ use a different named function >
+/// @mulle-objc@ use a different named function >
     static lldb_private::ConstString g_CFStringCreateWithBytes_str(
         "mulle_objc_lldb_create_staticstring");
-/// @mulle-lldb@ use a different named function <
+/// @mulle-objc@ use a different named function <
 
     bool missing_weak = false;
     CFStringCreateWithBytes_addr =
@@ -444,11 +444,11 @@ bool IRForTarget::RewriteObjCConstString(llvm::GlobalVariable *ns_str,
       return false;
     }
 
-/// @mulle-lldb@ use a different named function >
+/// @mulle-objc@ use a different named function >
     if (log)
       log->Printf("Found mulle_objc_lldb_create_staticstring at 0x%" PRIx64,
                   CFStringCreateWithBytes_addr);
-/// @mulle-lldb@ use a different named function <
+/// @mulle-objc@ use a different named function <
 
     // Build the function type:
     //
@@ -534,9 +534,9 @@ bool IRForTarget::RewriteObjCConstString(llvm::GlobalVariable *ns_str,
      [this, &CFSCWB_arguments](llvm::Function *function) -> llvm::Value * {
        return CallInst::Create(
            m_CFStringCreateWithBytes, CFSCWB_arguments,
-/// @mulle-lldb@ use a different named function >
+/// @mulle-objc@ use a different named function >
            "mulle_objc_lldb_create_staticstring",
-/// @mulle-lldb@ use a different named function <
+/// @mulle-objc@ use a different named function <
            llvm::cast<Instruction>(
                m_entry_instruction_finder.GetValue(function)));
      });
@@ -552,9 +552,9 @@ bool IRForTarget::RewriteObjCConstString(llvm::GlobalVariable *ns_str,
    return false;
   }
 
-/// @mulle-lldb@ just keep the original in there >
+/// @mulle-objc@ just keep the original in there >
 ///  ns_str->eraseFromParent();
-/// @mulle-lldb@ just keep the original in there <
+/// @mulle-objc@ just keep the original in there <
 
   return true;
 }
@@ -569,26 +569,26 @@ bool IRForTarget::RewriteObjCConstStrings() {
   for (StringMapEntry<llvm::Value *> &value_symbol : value_symbol_table) {
     llvm::StringRef value_name = value_symbol.first();
 
-/// @mulle-lldb@ search for header named __unnamed_nsstring >
-    if (strstr(value_name_cstr, "__unnamed_nsstring")) {
-      Value *nsheader_value = vi->second;
+/// @mulle-objc@ search for header named __unnamed_nsstring >
+    if ( value_name.contains( "__unnamed_nsstring")) {
+      Value *nsheader_value = value_symbol.second;
 
       GlobalVariable *nsheader_global =
           dyn_cast<GlobalVariable>(nsheader_value);
       if (!nsheader_global) {
-        LLDB_LOG("NSString header is not a GlobalVariable");
+        LLDB_LOG( log, "NSString header is not a GlobalVariable");
 
         m_error_stream.Printf("Internal error [IRForTarget]: An Objective-C "
                               "constant string header is not a global variable\n");
 
         return false;
       }
-/// @mulle-lldb@ search for header named __unnamed_nsstring <
+/// @mulle-objc@ search for header named __unnamed_nsstring <
 
-/// @mulle-lldb@ actually use header here >
+/// @mulle-objc@ actually use header here >
       if (!nsheader_global->hasInitializer()) {
-/// @mulle-lldb@ actually use header here <
-        LLDB_LOG("NSString variable does not have an initializer");
+/// @mulle-objc@ actually use header here <
+        LLDB_LOG( log, "NSString variable does not have an initializer");
 
         m_error_stream.Printf("Internal error [IRForTarget]: An Objective-C "
                               "constant string does not have an initializer\n");
@@ -596,10 +596,10 @@ bool IRForTarget::RewriteObjCConstStrings() {
         return false;
       }
 
-/// @mulle-lldb@ actually use header here >
+/// @mulle-objc@ actually use header here >
       ConstantStruct *nsstring_struct =
           dyn_cast<ConstantStruct>(nsheader_global->getInitializer());
-/// @mulle-lldb@ actually use header here <
+/// @mulle-objc@ actually use header here <
 
       if (!nsstring_struct) {
         LLDB_LOG(log,
@@ -733,10 +733,10 @@ bool IRForTarget::RewriteObjCConstStrings() {
       if (!cstr_array)
         cstr_global = nullptr;
 
-/// @mulle-lldb@ use actual string for substitution >
+/// @mulle-objc@ use actual string for substitution >
       GlobalVariable *nsstring_global;
 
-      nsstring_global = (GlobalVariable *) m_module->getNamedAlias( &value_name_cstr[ 1]);
+      nsstring_global = (GlobalVariable *) m_module->getNamedAlias( value_name.substr( 1));
       if (!nsstring_global) {
         if (log)
           log->PutCString("NSString for header not found");
@@ -746,7 +746,7 @@ bool IRForTarget::RewriteObjCConstStrings() {
 
         return false;
       }
-/// @mulle-lldb@ use actual string for substitution <
+/// @mulle-objc@ use actual string for substitution <
 
       if (!RewriteObjCConstString(nsstring_global, cstr_global)) {
         LLDB_LOG(log, "Error rewriting the constant string");

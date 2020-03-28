@@ -325,7 +325,7 @@ lldb::addr_t MulleObjCRuntimeV1::CallDangerousGetClassTableFunction( Process *pr
    TargetSP target_sp( thread_sp->CalculateTarget());
    thread_sp->CalculateExecutionContext(exe_ctx);
 
-   ClangASTContext *clang_ast_context = target_sp->GetScratchClangASTContext();
+   ClangASTContext *clang_ast_context = ClangASTContext::GetScratch( *target_sp, false);
 
    Value return_value;
    CompilerType clang_void_ptr_type =  clang_ast_context->GetBasicType(eBasicTypeVoid).GetPointerType();

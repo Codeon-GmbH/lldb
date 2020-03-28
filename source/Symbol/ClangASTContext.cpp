@@ -440,12 +440,12 @@ static void ParseLangArgs(LangOptions &Opts, InputKind IK, const char *triple) {
       break;
     case clang::Language::Asm:
     case clang::Language::C:
-// @mulle-lldb@ set C-lang to c11 >
+// @mulle-objc@ set C-lang to c11 >
     case clang::Language::ObjC:
     case clang::Language::ObjCAAM:
       LangStd = LangStandard::lang_c11;
       break;
-// @mulle-lldb@ set C-lang to c11 <
+// @mulle-objc@ set C-lang to c11 <
     case clang::Language::CXX:
     case clang::Language::ObjCXX:
       LangStd = LangStandard::lang_gnucxx98;
@@ -4574,7 +4574,7 @@ lldb::Encoding ClangASTContext::GetEncoding(lldb::opaque_compiler_type_t type,
     case clang::BuiltinType::ObjCClass:
     case clang::BuiltinType::ObjCId:
     case clang::BuiltinType::ObjCSel:
-// @mulle-clang@ add Protocol as Uint >
+// @mulle-objc@ add Protocol as Uint >
     case clang::BuiltinType::ObjCProtocol:
       return lldb::eEncodingUint;
 // @mulle-objc@ add Protocol as Uint <
@@ -7664,23 +7664,23 @@ clang::ObjCMethodDecl *ClangASTContext::AddMethodToObjCObjectType(
 
   if (num_args > 0) {
     llvm::SmallVector<clang::ParmVarDecl *, 12> params;
-/// @mulle-lldb@ add decls for parameter names >
+/// @mulle-objc@ add decls for parameter names >
     IdentifierInfo   *identifier;
-/// @mulle-lldb@ add decls for parameter names <
+/// @mulle-objc@ add decls for parameter names <
 
     for (unsigned param_index = 0; param_index < num_args; ++param_index) {
-/// @mulle-lldb@ add decls for parameter names >
+/// @mulle-objc@ add decls for parameter names >
       identifier = nullptr;
       if( param_index < function_param_decls.size())
         identifier = function_param_decls[ param_index]->getIdentifier();
-/// @mulle-lldb@ add decls for parameter names <
+/// @mulle-objc@ add decls for parameter names <
 
       params.push_back(clang::ParmVarDecl::Create(
           ast, objc_method_decl, clang::SourceLocation(),
           clang::SourceLocation(),
-/// @mulle-lldb@ add decls for parameter names >
+/// @mulle-objc@ add decls for parameter names >
           identifier,
-/// @mulle-lldb@ add decls for parameter names <
+/// @mulle-objc@ add decls for parameter names <
           method_function_prototype->getParamType(param_index), nullptr,
           clang::SC_Auto, nullptr));
     }

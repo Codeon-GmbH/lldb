@@ -529,9 +529,9 @@ ClangExpressionParser::ClangExpressionParser(
           ObjCLanguageRuntime::ObjCRuntimeVersions::eAppleObjC_V2)
         lang_opts.ObjCRuntime.set(ObjCRuntime::MacOSX, VersionTuple(10, 7));
       else
-/// @mulle-lldb@ change to Mulle runtime >
+/// @mulle-objc@ change to Mulle runtime >
       {
-        // @mulle-lldb@ MUST CHANGE VERSION FOR EACH LLDB RELEASE!!
+        // @mulle-objc@ MUST CHANGE VERSION FOR EACH LLDB RELEASE!!
         m_compiler->getLangOpts().ObjCRuntime.set(ObjCRuntime::Mulle,
                                                   VersionTuple(0, 16));
         // tagged pointers are not good for JIT, but I don't know exactly why yet
@@ -545,7 +545,7 @@ ClangExpressionParser::ClangExpressionParser(
         //m_compiler->getLangOpts().CPlusPlus = false;
         //m_compiler->getLangOpts().CPlusPlus11 = false;
       }
-/// @mulle-lldb@ change to Mulle runtime <
+/// @mulle-objc@ change to Mulle runtime <
 
       if (runtime->HasNewLiteralsAndIndexing())
         lang_opts.DebuggerObjCLiteral = true;
