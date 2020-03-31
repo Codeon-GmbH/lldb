@@ -18,10 +18,10 @@ LLVM_VERSION="10.0.0"
 #LLVM_RC="2" # leave empty for releases
 
 # our compiler version
-MULLE_CLANG_VERSION="${LLVM_VERSION}.0"
-# MULLE_CLANG_RC="2"
+MULLE_CLANG_VERSION="${LLVM_VERSION}.2"
+# MULLE_CLANG_RC="prerelease"
 MULLE_LLDB_VERSION="${LLVM_VERSION}.0"
-# MULLE_LLDB_RC="2"
+# MULLE_LLDB_RC="prerelease"
 
 
 # STRICT means compile it like LLVM does (everything all the time)
@@ -126,7 +126,7 @@ setup_fetch_environment()
       then
          MULLE_CLANG_ARCHIVENAME="${MULLE_CLANG_VERSION}"
       else
-         MULLE_CLANG_ARCHIVENAME="${MULLE_CLANG_VERSION}-RC${MULLE_CLANG_RC}"
+         MULLE_CLANG_ARCHIVENAME="${MULLE_CLANG_VERSION}-${MULLE_CLANG_RC}"
       fi
       MULLE_CLANG_ARCHIVE="https://github.com/Codeon-GmbH/mulle-clang/archive/${MULLE_CLANG_ARCHIVENAME}.tar.gz"
       MULLE_CLANG_UNPACKNAME="mulle-clang-${MULLE_CLANG_ARCHIVENAME}"
@@ -138,7 +138,7 @@ setup_fetch_environment()
       then
          MULLE_LLDB_ARCHIVENAME="${MULLE_LLDB_VERSION}"
       else
-         MULLE_LLDB_ARCHIVENAME="${MULLE_LLDB_VERSION}-RC${MULLE_LLDB_RC}"
+         MULLE_LLDB_ARCHIVENAME="${MULLE_LLDB_VERSION}-${MULLE_LLDB_RC}"
       fi
       MULLE_LLDB_ARCHIVE="https://github.com/Codeon-GmbH/mulle-lldb/archive/${MULLE_LLDB_ARCHIVENAME}.tar.gz"
       MULLE_LLDB_UNPACKNAME="mulle-lldb-${MULLE_LLDB_ARCHIVENAME}"
@@ -712,7 +712,7 @@ get_mulle_clang_version()
       then
          eval echo "${version}"
       else
-         eval echo "${version}-RC${rc}"
+         eval echo "${version}-${rc}"
       fi
    fi
 }
