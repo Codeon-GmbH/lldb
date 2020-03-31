@@ -42,7 +42,7 @@ const char *lldb_private::GetVersion() {
   static std::string g_version_str;
   if (g_version_str.empty()) {
 /// @mulle-objc@ mulle-lldb as version string >
-    g_version_str += "mulle-lldb version 9.0.0.0";
+    g_version_str += "mulle-lldb version 10.0.0.0";
 /// @mulle-objc@ mulle-lldb as version string <
 
     const char *lldb_repo = GetLLDBRepository();
